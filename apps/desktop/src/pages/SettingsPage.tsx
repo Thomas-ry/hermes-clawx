@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useI18n } from '../i18n'
 
 type ConfigShape = {
@@ -15,6 +15,7 @@ type ConfigShape = {
 
 export function SettingsPage() {
   const { language, setLanguage, t } = useI18n()
+  const importInputRef = useRef<HTMLInputElement | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState<string | null>(null)
@@ -26,53 +27,99 @@ export function SettingsPage() {
   const [terminalTimeout, setTerminalTimeout] = useState('180')
   const [terminalCwd, setTerminalCwd] = useState('.')
 
-  async function load() {
+  function applyConfig(next: ConfigShape) {
+    setConfig(next)
+    setModel(String(next.model ?? ''))
+    setMaxTurns(String(next.agent?.max_turns ?? 90))
+    setTerminalBackend(String(next.terminal?.backend ?? 'local'))
+    setTerminalTimeout(String(next.terminal?.timeout ?? 180))
+    setTerminalCwd(String(next.terminal?.cwd ?? '.'))
+  }
+
+  function buildConfigDraft(): ConfigShape {
+    return {
+      ...config,
+      model,
+      agent: {
+        ...(config.agent ?? {}),
+        max_turns: Number(maxTurns || 90),
+      },
+      terminal: {
+        ...(config.terminal ?? {}),
+        backend: terminalBackend,
+        timeout: Number(terminalTimeout || 180),
+        cwd: terminalCwd,
+      },
+    }
+  }
+
+  const load = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
       const next = (await window.hermes.config.get()) as ConfigShape
-      setConfig(next)
-      setModel(String(next.model ?? ''))
-      setMaxTurns(String(next.agent?.max_turns ?? 90))
-      setTerminalBackend(String(next.terminal?.backend ?? 'local'))
-      setTerminalTimeout(String(next.terminal?.timeout ?? 180))
-      setTerminalCwd(String(next.terminal?.cwd ?? '.'))
+      applyConfig(next)
     } catch (e) {
       setError(String(e))
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   async function save() {
     try {
       setError(null)
       setSaved(null)
-      const next: ConfigShape = {
-        ...config,
-        model,
-        agent: {
-          ...(config.agent ?? {}),
-          max_turns: Number(maxTurns || 90),
-        },
-        terminal: {
-          ...(config.terminal ?? {}),
-          backend: terminalBackend,
-          timeout: Number(terminalTimeout || 180),
-          cwd: terminalCwd,
-        },
-      }
+      const next = buildConfigDraft()
       await window.hermes.config.save(next as Record<string, unknown>)
+      applyConfig(next)
       setSaved(t('settings.saved'))
-      setConfig(next)
     } catch (e) {
       setError(String(e))
     }
   }
 
+  function exportConfig() {
+    try {
+      setError(null)
+      setSaved(null)
+      const next = buildConfigDraft()
+      const blob = new Blob([`${JSON.stringify(next, null, 2)}\n`], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = 'clawT-config.json'
+      anchor.click()
+      URL.revokeObjectURL(url)
+      setSaved(t('settings.exported'))
+    } catch (e) {
+      setError(String(e))
+    }
+  }
+
+  async function importConfig(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (!file) {
+      return
+    }
+
+    try {
+      setError(null)
+      setSaved(null)
+      const raw = await file.text()
+      const parsed = JSON.parse(raw) as ConfigShape
+      applyConfig(parsed)
+      setSaved(t('settings.importLoaded'))
+    } catch (e) {
+      setError(`${t('settings.importFailed')}: ${String(e)}`)
+    } finally {
+      event.target.value = ''
+    }
+  }
+
   useEffect(() => {
     load()
-  }, [])
+  }, [load])
 
   return (
     <div style={{ maxWidth: 960 }}>
@@ -136,9 +183,18 @@ export function SettingsPage() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+      <div style={{ display: 'flex', gap: 12, marginTop: 16, flexWrap: 'wrap' }}>
         <button onClick={save} disabled={loading}>{t('settings.save')}</button>
         <button onClick={load} disabled={loading}>{t('settings.reload')}</button>
+        <button onClick={exportConfig} disabled={loading}>{t('settings.export')}</button>
+        <button onClick={() => importInputRef.current?.click()} disabled={loading}>{t('settings.import')}</button>
+        <input
+          ref={importInputRef}
+          type="file"
+          accept="application/json,.json"
+          onChange={importConfig}
+          style={{ display: 'none' }}
+        />
       </div>
     </div>
   )

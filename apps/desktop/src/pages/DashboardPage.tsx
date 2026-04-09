@@ -23,6 +23,7 @@ export function DashboardPage() {
   const [err, setErr] = useState<string | null>(null)
   const [releaseFeed, setReleaseFeed] = useState<ReleaseFeedSummary | null>(null)
   const [releaseFeedError, setReleaseFeedError] = useState<string | null>(null)
+  const [releaseFeedLoading, setReleaseFeedLoading] = useState(false)
 
   async function refresh() {
     try {
@@ -44,15 +45,23 @@ export function DashboardPage() {
     return unsubscribe
   }, [])
 
-  useEffect(() => {
+  function refreshReleaseFeed() {
+    setReleaseFeedLoading(true)
+    setReleaseFeedError(null)
     fetchReleaseFeedSummary()
       .then((summary) => {
         setReleaseFeed(summary)
-        setReleaseFeedError(null)
       })
       .catch((error) => {
         setReleaseFeedError(String(error))
       })
+      .finally(() => {
+        setReleaseFeedLoading(false)
+      })
+  }
+
+  useEffect(() => {
+    refreshReleaseFeed()
   }, [])
 
   function renderUpdaterStatus(current: UpdaterStatus | null): string {
@@ -172,6 +181,11 @@ export function DashboardPage() {
       <section style={{ background: 'rgba(255,255,255,0.04)', padding: 12, borderRadius: 12, marginBottom: 16 }}>
         <h3 style={{ marginTop: 0 }}>{t('dashboard.releaseNotesTitle')}</h3>
         <p style={{ opacity: 0.8, marginTop: 4 }}>{t('dashboard.releaseNotesDescription')}</p>
+        <div style={{ display: 'flex', gap: 12, margin: '12px 0 16px', flexWrap: 'wrap' }}>
+          <button onClick={refreshReleaseFeed} disabled={releaseFeedLoading}>
+            {releaseFeedLoading ? t('dashboard.releaseNotesRefreshing') : t('dashboard.releaseNotesRefresh')}
+          </button>
+        </div>
         <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 8 }}>{t('dashboard.updateSource')}</div>
         <div style={{ fontSize: 12, opacity: 0.9, wordBreak: 'break-all' }}>{PUBLIC_UPDATE_FEED_URL}</div>
 

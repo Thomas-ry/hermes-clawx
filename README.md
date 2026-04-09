@@ -78,6 +78,32 @@ GitHub Actions 工作流会：
 
 你也可以在 Actions 页面手动触发，并覆盖 Hermes 上游 commit/tag。
 
+## 发布流程
+
+### 方案 A：打 tag 自动发草稿 Release
+
+```bash
+git tag v0.1.1
+git push origin v0.1.1
+```
+
+- `release.yml` 会在三平台构建产物
+- 构建完成后自动创建 GitHub Draft Release
+- 安装包和 blockmap 会自动挂到该 Release
+
+### 方案 B：手动触发 Release Workflow
+
+- 在 GitHub Actions 里运行 `release`
+- 输入版本号，例如 `0.1.1`
+- 可选覆盖 `hermes_ref`
+- 工作流会临时同步版本号、构建三平台安装包并发布 Draft Release
+
+### 当前限制
+
+- macOS：本地可正常打包，但默认未签名
+- Linux：需要完整 metadata，当前仓库已补齐
+- Windows：建议优先在 GitHub Actions 的 `windows-latest` 上产包，最稳定
+
 ## 运行时说明
 
 - Hermes Gateway 由 Electron Main 进程托管（自动启动/重启），并启用本机 OpenAI 兼容 API server。

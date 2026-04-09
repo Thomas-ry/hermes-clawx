@@ -36,6 +36,9 @@ jobs:
       - name: Install deps
         run: pnpm install
 
+      - name: Build app icons
+        run: pnpm icons:build
+
       - name: Build bundled Hermes runtime
         env:
           HERMES_AGENT_REF: ${{ inputs.hermes_ref || '18140199c3a1cbb658a2eeadf692ffb8b5d1626f' }}

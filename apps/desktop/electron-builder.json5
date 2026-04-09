@@ -4,6 +4,14 @@
   "appId": "com.thomas.clawt",
   "asar": true,
   "productName": "clawT",
+  "publish": [
+    {
+      "provider": "github",
+      "owner": "Thomas-ry",
+      "repo": "hermes-clawT",
+      "private": true
+    }
+  ],
   "directories": {
     "output": "release/${version}"
   },
@@ -50,6 +58,8 @@
   },
   "linux": {
     "icon": "build/icon.png",
+    "category": "Utility",
+    "maintainer": "Thomas <thomas@users.noreply.github.com>",
     "target": [
       "AppImage",
       "deb"

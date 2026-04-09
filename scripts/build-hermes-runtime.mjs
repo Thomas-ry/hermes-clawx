@@ -1,8 +1,10 @@
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, rmSync } from 'node:fs'
+import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
-const repoRoot = path.resolve(process.cwd())
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const repoRoot = path.resolve(__dirname, '..')
 
 const HERMES_AGENT_GIT_URL = process.env.HERMES_AGENT_GIT_URL ?? 'https://github.com/NousResearch/hermes-agent.git'
 const HERMES_AGENT_REF = process.env.HERMES_AGENT_REF ?? '18140199c3a1cbb658a2eeadf692ffb8b5d1626f'
@@ -65,8 +67,7 @@ function main() {
     platform: process.platform,
     arch: process.arch,
   }
-  const metaJson = JSON.stringify(meta, null, 2)
-  run('node', ['-e', `require('fs').writeFileSync(${JSON.stringify(path.join(actualOut, 'BUNDLED_RUNTIME.json'))}, ${JSON.stringify(metaJson)})`])
+  writeFileSync(path.join(actualOut, 'BUNDLED_RUNTIME.json'), `${JSON.stringify(meta, null, 2)}\n`, 'utf8')
 
   // eslint-disable-next-line no-console
   console.log(`✅ Hermes runtime built: ${actualOut}`)

@@ -1,7 +1,12 @@
 name: build
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      hermes_ref:
+        description: Hermes upstream git ref (commit, tag, or branch)
+        required: false
+        default: '18140199c3a1cbb658a2eeadf692ffb8b5d1626f'
   push:
     branches: [ main ]
 
@@ -32,6 +37,8 @@ jobs:
         run: pnpm install
 
       - name: Build bundled Hermes runtime
+        env:
+          HERMES_AGENT_REF: ${{ inputs.hermes_ref || '18140199c3a1cbb658a2eeadf692ffb8b5d1626f' }}
         run: pnpm runtime:build
 
       - name: Package (macOS)
@@ -49,5 +56,5 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: desktop-${{ runner.os }}
+          name: clawT-${{ runner.os }}
           path: apps/desktop/release/**

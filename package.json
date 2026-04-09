@@ -1,5 +1,7 @@
 {
   "name": "hermes-clawt",
+  "version": "0.1.0",
+  "description": "clawT desktop GUI for Hermes Agent",
   "private": true,
   "packageManager": "pnpm@10.32.1",
   "type": "module",

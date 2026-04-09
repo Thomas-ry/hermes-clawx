@@ -14,7 +14,7 @@ export function ChatPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const visibleMessages = useMemo(() => messages.filter((m) => m.role !== 'system'), [messages])
+  const visibleMessages = useMemo(() => messages.filter((message) => message.role !== 'system'), [messages])
 
   async function send() {
     const text = draft.trim()
@@ -35,38 +35,78 @@ export function ChatPage() {
   }
 
   return (
-    <div style={{ height: '100%', display: 'grid', gridTemplateRows: 'auto 1fr auto', gap: 12 }}>
-      <div>
-        <h2>{t('chat.title')}</h2>
-        <p style={{ opacity: 0.8, marginTop: 4 }}>{t('chat.description')}</p>
+    <div className="page-shell">
+      <div className="page-header">
+        <h2 className="page-title">{t('chat.title')}</h2>
+        <p className="page-description">{t('chat.description')}</p>
       </div>
 
-      <div style={{ overflow: 'auto', padding: 12, borderRadius: 12, background: 'rgba(255,255,255,0.04)' }}>
-        {visibleMessages.map((m, idx) => (
-          <div key={idx} style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 12, opacity: 0.75 }}>{getChatRoleLabel(m.role, t)}</div>
-            <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.45 }}>{m.content}</div>
+      <div className="ui-card">
+        <div className="ui-card-body" style={{ display: 'grid', gap: 16 }}>
+          <div
+            className="ui-surface"
+            style={{
+              minHeight: 420,
+              maxHeight: 'calc(100vh - 330px)',
+              overflow: 'auto',
+              display: 'grid',
+              gap: 14,
+              alignContent: 'start',
+            }}
+          >
+            {visibleMessages.map((message, index) => (
+              <div
+                key={`${message.role}-${index}`}
+                style={{
+                  display: 'grid',
+                  gap: 8,
+                  justifyItems: message.role === 'user' ? 'end' : 'start',
+                }}
+              >
+                <span className="ui-pill">{getChatRoleLabel(message.role, t)}</span>
+                <div
+                  style={{
+                    maxWidth: '78%',
+                    padding: '14px 16px',
+                    borderRadius: 18,
+                    background:
+                      message.role === 'user'
+                        ? 'linear-gradient(180deg, rgba(124, 140, 255, 0.28), rgba(124, 140, 255, 0.14))'
+                        : 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    whiteSpace: 'pre-wrap',
+                    lineHeight: 1.6,
+                  }}
+                >
+                  {message.content}
+                </div>
+              </div>
+            ))}
+            {busy ? <div className="ui-meta">{t('chat.thinking')}</div> : null}
+            {error ? <div className="ui-status-error">{error}</div> : null}
           </div>
-        ))}
-        {busy ? <div style={{ opacity: 0.7 }}>{t('chat.thinking')}</div> : null}
-        {error ? <div style={{ color: '#ffb4b4', whiteSpace: 'pre-wrap' }}>{error}</div> : null}
-      </div>
 
-      <div style={{ display: 'flex', gap: 12 }}>
-        <textarea
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder={t('chat.placeholder')}
-          style={{ flex: 1, minHeight: 72, resize: 'vertical' }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) send()
-          }}
-        />
-        <button onClick={send} disabled={busy || !draft.trim()}>
-          {t('chat.send')}
-        </button>
+          <div className="ui-card-soft" style={{ padding: 14 }}>
+            <div style={{ display: 'grid', gap: 12 }}>
+              <textarea
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                placeholder={t('chat.placeholder')}
+                style={{ minHeight: 110 }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) send()
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                <div className="ui-meta">{t('chat.tip')}</div>
+                <button onClick={send} disabled={busy || !draft.trim()}>
+                  {t('chat.send')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div style={{ fontSize: 12, opacity: 0.7 }}>{t('chat.tip')}</div>
     </div>
   )
 }

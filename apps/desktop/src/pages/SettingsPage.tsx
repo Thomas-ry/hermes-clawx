@@ -122,79 +122,93 @@ export function SettingsPage() {
   }, [load])
 
   return (
-    <div style={{ maxWidth: 960 }}>
-      <h2>{t('settings.title')}</h2>
-      <p style={{ opacity: 0.8, marginTop: 4 }}>{t('settings.description')} <code>config.yaml</code>.</p>
-
-      {error ? <pre style={{ color: '#ffb4b4', whiteSpace: 'pre-wrap' }}>{error}</pre> : null}
-      {saved ? <div style={{ color: '#b7ffcc' }}>{saved}</div> : null}
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
-        <div style={{ background: 'rgba(255,255,255,0.04)', padding: 12, borderRadius: 12 }}>
-          <h3 style={{ marginTop: 0 }}>{t('settings.languageTitle')}</h3>
-          <p style={{ opacity: 0.8, marginTop: 4 }}>{t('settings.languageDescription')}</p>
-          <label style={{ display: 'block', marginBottom: 10 }}>
-            <div style={{ fontSize: 12, opacity: 0.8 }}>{t('app.language')}</div>
-            <select value={language} onChange={(e) => setLanguage(e.target.value as 'en' | 'zh')} style={{ width: '100%' }}>
-              <option value="en">{t('app.english')}</option>
-              <option value="zh">{t('app.chinese')}</option>
-            </select>
-          </label>
-        </div>
-
-        <div style={{ background: 'rgba(255,255,255,0.04)', padding: 12, borderRadius: 12 }}>
-          <h3 style={{ marginTop: 0 }}>{t('settings.modelTitle')}</h3>
-          <label style={{ display: 'block', marginBottom: 10 }}>
-            <div style={{ fontSize: 12, opacity: 0.8 }}>{t('settings.defaultModel')}</div>
-            <input
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              style={{ width: '100%' }}
-              placeholder="openai/gpt-5.3-codex"
-            />
-          </label>
-          <label style={{ display: 'block', marginBottom: 10 }}>
-            <div style={{ fontSize: 12, opacity: 0.8 }}>{t('settings.maxTurns')}</div>
-            <input value={maxTurns} onChange={(e) => setMaxTurns(e.target.value)} style={{ width: '100%' }} />
-          </label>
-        </div>
-
-        <div style={{ background: 'rgba(255,255,255,0.04)', padding: 12, borderRadius: 12 }}>
-          <h3 style={{ marginTop: 0 }}>{t('settings.terminalTitle')}</h3>
-          <label style={{ display: 'block', marginBottom: 10 }}>
-            <div style={{ fontSize: 12, opacity: 0.8 }}>{t('settings.backend')}</div>
-            <select value={terminalBackend} onChange={(e) => setTerminalBackend(e.target.value)} style={{ width: '100%' }}>
-              <option value="local">{t('settings.backendLocal')}</option>
-              <option value="docker">{t('settings.backendDocker')}</option>
-              <option value="ssh">{t('settings.backendSsh')}</option>
-              <option value="modal">{t('settings.backendModal')}</option>
-              <option value="daytona">{t('settings.backendDaytona')}</option>
-              <option value="singularity">{t('settings.backendSingularity')}</option>
-            </select>
-          </label>
-          <label style={{ display: 'block', marginBottom: 10 }}>
-            <div style={{ fontSize: 12, opacity: 0.8 }}>{t('settings.timeout')}</div>
-            <input value={terminalTimeout} onChange={(e) => setTerminalTimeout(e.target.value)} style={{ width: '100%' }} />
-          </label>
-          <label style={{ display: 'block', marginBottom: 10 }}>
-            <div style={{ fontSize: 12, opacity: 0.8 }}>{t('settings.workingDirectory')}</div>
-            <input value={terminalCwd} onChange={(e) => setTerminalCwd(e.target.value)} style={{ width: '100%' }} />
-          </label>
-        </div>
+    <div className="page-shell">
+      <div className="page-header">
+        <h2 className="page-title">{t('settings.title')}</h2>
+        <p className="page-description">{t('settings.description')} <span className="ui-code">config.yaml</span>.</p>
       </div>
 
-      <div style={{ display: 'flex', gap: 12, marginTop: 16, flexWrap: 'wrap' }}>
-        <button onClick={save} disabled={loading}>{t('settings.save')}</button>
-        <button onClick={load} disabled={loading}>{t('settings.reload')}</button>
-        <button onClick={exportConfig} disabled={loading}>{t('settings.export')}</button>
-        <button onClick={() => importInputRef.current?.click()} disabled={loading}>{t('settings.import')}</button>
-        <input
-          ref={importInputRef}
-          type="file"
-          accept="application/json,.json"
-          onChange={importConfig}
-          style={{ display: 'none' }}
-        />
+      {error ? <div className="ui-status-error">{error}</div> : null}
+      {saved ? <div className="ui-status-success" style={{ marginTop: error ? 12 : 0 }}>{saved}</div> : null}
+
+      <div className="ui-grid ui-grid-two" style={{ marginTop: 18 }}>
+        <section className="ui-card">
+          <div className="ui-card-body">
+            <h3 className="ui-card-title">{t('settings.languageTitle')}</h3>
+            <p className="ui-card-description">{t('settings.languageDescription')}</p>
+            <label className="ui-label" style={{ marginTop: 18 }}>
+              <div className="ui-label-text">{t('app.language')}</div>
+              <select value={language} onChange={(e) => setLanguage(e.target.value as 'en' | 'zh')}>
+                <option value="en">{t('app.english')}</option>
+                <option value="zh">{t('app.chinese')}</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section className="ui-card">
+          <div className="ui-card-body">
+            <h3 className="ui-card-title">{t('settings.modelTitle')}</h3>
+            <p className="ui-card-description">{t('settings.defaultModel')}</p>
+            <label className="ui-label" style={{ marginTop: 18 }}>
+              <div className="ui-label-text">{t('settings.defaultModel')}</div>
+              <input value={model} onChange={(e) => setModel(e.target.value)} placeholder="openai/gpt-5.3-codex" />
+            </label>
+            <label className="ui-label">
+              <div className="ui-label-text">{t('settings.maxTurns')}</div>
+              <input value={maxTurns} onChange={(e) => setMaxTurns(e.target.value)} />
+            </label>
+          </div>
+        </section>
+
+        <section className="ui-card">
+          <div className="ui-card-body">
+            <h3 className="ui-card-title">{t('settings.terminalTitle')}</h3>
+            <p className="ui-card-description">{t('settings.description')}</p>
+            <label className="ui-label" style={{ marginTop: 18 }}>
+              <div className="ui-label-text">{t('settings.backend')}</div>
+              <select value={terminalBackend} onChange={(e) => setTerminalBackend(e.target.value)}>
+                <option value="local">{t('settings.backendLocal')}</option>
+                <option value="docker">{t('settings.backendDocker')}</option>
+                <option value="ssh">{t('settings.backendSsh')}</option>
+                <option value="modal">{t('settings.backendModal')}</option>
+                <option value="daytona">{t('settings.backendDaytona')}</option>
+                <option value="singularity">{t('settings.backendSingularity')}</option>
+              </select>
+            </label>
+            <label className="ui-label">
+              <div className="ui-label-text">{t('settings.timeout')}</div>
+              <input value={terminalTimeout} onChange={(e) => setTerminalTimeout(e.target.value)} />
+            </label>
+            <label className="ui-label">
+              <div className="ui-label-text">{t('settings.workingDirectory')}</div>
+              <input value={terminalCwd} onChange={(e) => setTerminalCwd(e.target.value)} />
+            </label>
+          </div>
+        </section>
+
+        <section className="ui-card">
+          <div className="ui-card-body">
+            <h3 className="ui-card-title">clawT</h3>
+            <p className="ui-card-description">{t('settings.portabilityDescription')}</p>
+            <div className="ui-toolbar" style={{ marginTop: 18 }}>
+              <button onClick={save} disabled={loading}>{t('settings.save')}</button>
+              <button onClick={load} disabled={loading}>{t('settings.reload')}</button>
+              <button onClick={exportConfig} disabled={loading}>{t('settings.export')}</button>
+              <button onClick={() => importInputRef.current?.click()} disabled={loading}>{t('settings.import')}</button>
+            </div>
+            <div className="ui-meta" style={{ marginTop: 14 }}>
+              {t('settings.importHint')}
+            </div>
+            <input
+              ref={importInputRef}
+              type="file"
+              accept="application/json,.json"
+              onChange={importConfig}
+              style={{ display: 'none' }}
+            />
+          </div>
+        </section>
       </div>
     </div>
   )

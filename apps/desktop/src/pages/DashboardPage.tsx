@@ -111,143 +111,146 @@ export function DashboardPage() {
   }
 
   function formatPublishedAt(value?: string): string | null {
-    if (!value) {
-      return null
-    }
+    if (!value) return null
     const date = new Date(value)
-    if (Number.isNaN(date.getTime())) {
-      return value
-    }
+    if (Number.isNaN(date.getTime())) return value
     return new Intl.DateTimeFormat(language === 'zh' ? 'zh-CN' : 'en-US', {
       dateStyle: 'medium',
       timeStyle: 'short',
     }).format(date)
   }
 
-  return (
-    <div style={{ maxWidth: 900 }}>
-      <h2>{t('dashboard.title')}</h2>
-      <p style={{ opacity: 0.8, marginTop: 4 }}>{t('dashboard.description')}</p>
+  const runtime = (status as { runtime?: { hermesHomeDir?: string; gatewayPort?: number } } | null)?.runtime
 
-      <div style={{ display: 'flex', gap: 12, margin: '12px 0 16px' }}>
-        <button onClick={() => window.hermes.gateway.start().then(refresh).catch((e) => setErr(String(e)))}>{t('dashboard.start')}</button>
-        <button onClick={() => window.hermes.gateway.stop().then(refresh).catch((e) => setErr(String(e)))}>{t('dashboard.stop')}</button>
-        <button onClick={() => window.hermes.gateway.restart().then(refresh).catch((e) => setErr(String(e)))}>{t('dashboard.restart')}</button>
-        <button onClick={refresh}>{t('dashboard.refresh')}</button>
+  return (
+    <div className="page-shell">
+      <div className="page-header">
+        <h2 className="page-title">{t('dashboard.title')}</h2>
+        <p className="page-description">{t('dashboard.description')}</p>
       </div>
 
-      {err ? (
-        <pre style={{ color: '#ffb4b4', whiteSpace: 'pre-wrap' }}>{err}</pre>
-      ) : null}
-
-      <section style={{ background: 'rgba(255,255,255,0.04)', padding: 12, borderRadius: 12, marginBottom: 16 }}>
-        <h3 style={{ marginTop: 0 }}>{t('dashboard.autoUpdateTitle')}</h3>
-        <p style={{ opacity: 0.8, marginTop: 4 }}>{t('dashboard.autoUpdateDescription')}</p>
-        <div style={{ display: 'flex', gap: 12, margin: '12px 0 16px', flexWrap: 'wrap' }}>
-          <button onClick={() => window.hermes.updater.check().catch((e) => setErr(String(e)))}>{t('dashboard.checkUpdates')}</button>
-          <button
-            onClick={() => window.hermes.updater.download().catch((e) => setErr(String(e)))}
-            disabled={!updater?.available || updater?.downloading || updater?.downloaded}
-          >
-            {t('dashboard.downloadUpdate')}
-          </button>
-          <button
-            onClick={() => window.hermes.updater.install().catch((e) => setErr(String(e)))}
-            disabled={!updater?.downloaded}
-          >
-            {t('dashboard.restartInstall')}
-          </button>
-        </div>
-        <div style={{ background: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 12 }}>
-          <div style={{ fontWeight: 600, marginBottom: 8 }}>{renderUpdaterStatus(updater)}</div>
-          <div style={{ fontSize: 12, opacity: 0.75 }}>{t('dashboard.updateSource')}</div>
-          <div style={{ fontSize: 12, opacity: 0.9, wordBreak: 'break-all' }}>https://thomas-ry.github.io/hermes-clawT/updates</div>
-          {updater?.lastCheckedAt ? (
-            <div style={{ fontSize: 12, opacity: 0.75, marginTop: 8 }}>
-              {t('dashboard.lastChecked')}: {updater.lastCheckedAt}
-            </div>
-          ) : null}
-          {(updater?.version || updater?.downloadedVersion) ? (
-            <div style={{ fontSize: 12, opacity: 0.75, marginTop: 4 }}>
-              {t('dashboard.versionInfo')}: {updater.downloadedVersion ?? updater.version}
-            </div>
-          ) : null}
-          {updater?.error ? (
-            <div style={{ color: '#ffb4b4', marginTop: 8, whiteSpace: 'pre-wrap' }}>{updater.error}</div>
-          ) : null}
-        </div>
-      </section>
-
-      <section style={{ background: 'rgba(255,255,255,0.04)', padding: 12, borderRadius: 12, marginBottom: 16 }}>
-        <h3 style={{ marginTop: 0 }}>{t('dashboard.releaseNotesTitle')}</h3>
-        <p style={{ opacity: 0.8, marginTop: 4 }}>{t('dashboard.releaseNotesDescription')}</p>
-        <div style={{ display: 'flex', gap: 12, margin: '12px 0 16px', flexWrap: 'wrap' }}>
-          <button onClick={refreshReleaseFeed} disabled={releaseFeedLoading}>
-            {releaseFeedLoading ? t('dashboard.releaseNotesRefreshing') : t('dashboard.releaseNotesRefresh')}
-          </button>
-        </div>
-        <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 8 }}>{t('dashboard.updateSource')}</div>
-        <div style={{ fontSize: 12, opacity: 0.9, wordBreak: 'break-all' }}>{PUBLIC_UPDATE_FEED_URL}</div>
-
-        {releaseFeed ? (
-          <div style={{ marginTop: 12 }}>
-            <div style={{ fontWeight: 600 }}>
-              {t('dashboard.releaseVersion')}: {releaseFeed.version} ({releaseFeed.tag})
-            </div>
-            {releaseFeed.previousTag ? (
-              <div style={{ fontSize: 12, opacity: 0.75, marginTop: 6 }}>
-                {t('dashboard.previousVersion')}: {releaseFeed.previousTag}
+      <div className="ui-grid ui-grid-two">
+        <section className="ui-card">
+          <div className="ui-card-body">
+            <div className="ui-toolbar" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+              <div>
+                <h3 className="ui-card-title">{t('dashboard.autoUpdateTitle')}</h3>
+                <p className="ui-card-description">{t('dashboard.autoUpdateDescription')}</p>
               </div>
-            ) : null}
-            {formatPublishedAt(releaseFeed.publishedAt) ? (
-              <div style={{ fontSize: 12, opacity: 0.75, marginTop: 6 }}>
-                {t('dashboard.publishedAt')}: {formatPublishedAt(releaseFeed.publishedAt)}
+              <span className="ui-pill">{renderUpdaterStatus(updater)}</span>
+            </div>
+
+            <div className="ui-toolbar" style={{ marginBottom: 18 }}>
+              <button onClick={() => window.hermes.gateway.start().then(refresh).catch((e) => setErr(String(e)))}>{t('dashboard.start')}</button>
+              <button onClick={() => window.hermes.gateway.stop().then(refresh).catch((e) => setErr(String(e)))}>{t('dashboard.stop')}</button>
+              <button onClick={() => window.hermes.gateway.restart().then(refresh).catch((e) => setErr(String(e)))}>{t('dashboard.restart')}</button>
+              <button onClick={refresh}>{t('dashboard.refresh')}</button>
+            </div>
+
+            <div className="ui-surface" style={{ display: 'grid', gap: 12 }}>
+              <div className="ui-toolbar">
+                <button onClick={() => window.hermes.updater.check().catch((e) => setErr(String(e)))}>{t('dashboard.checkUpdates')}</button>
+                <button
+                  onClick={() => window.hermes.updater.download().catch((e) => setErr(String(e)))}
+                  disabled={!updater?.available || updater?.downloading || updater?.downloaded}
+                >
+                  {t('dashboard.downloadUpdate')}
+                </button>
+                <button
+                  onClick={() => window.hermes.updater.install().catch((e) => setErr(String(e)))}
+                  disabled={!updater?.downloaded}
+                >
+                  {t('dashboard.restartInstall')}
+                </button>
               </div>
-            ) : null}
-            {releaseFeed.compareUrl ? (
-              <div style={{ fontSize: 12, opacity: 0.85, marginTop: 6, wordBreak: 'break-all' }}>
-                {t('dashboard.compareLink')}: {releaseFeed.compareUrl}
+              <div className="ui-meta">{t('dashboard.updateSource')}</div>
+              <div className="ui-code" style={{ width: 'fit-content', maxWidth: '100%', wordBreak: 'break-all' }}>{PUBLIC_UPDATE_FEED_URL}</div>
+              {updater?.lastCheckedAt ? <div className="ui-meta">{t('dashboard.lastChecked')}: {updater.lastCheckedAt}</div> : null}
+              {(updater?.version || updater?.downloadedVersion) ? (
+                <div className="ui-meta">{t('dashboard.versionInfo')}: {updater.downloadedVersion ?? updater.version}</div>
+              ) : null}
+              {updater?.error ? <div className="ui-status-error">{updater.error}</div> : null}
+            </div>
+          </div>
+        </section>
+
+        <section className="ui-card">
+          <div className="ui-card-body">
+            <div className="ui-toolbar" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+              <div>
+                <h3 className="ui-card-title">{t('dashboard.releaseNotesTitle')}</h3>
+                <p className="ui-card-description">{t('dashboard.releaseNotesDescription')}</p>
               </div>
-            ) : null}
-            <div style={{ marginTop: 12, display: 'grid', gap: 12 }}>
-              {releaseFeed.sections.map((section) => (
-                <div key={section.category}>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>{renderReleaseCategory(section.category)}</div>
-                  <ul style={{ margin: '8px 0 0 18px', padding: 0 }}>
-                    {section.items.map((item) => (
-                      <li key={`${section.category}-${item.hash}-${item.summary}`} style={{ marginBottom: 6 }}>
-                        <span>{item.summary}</span>
-                        <span style={{ opacity: 0.65 }}> ({item.hash}, {item.author})</span>
-                      </li>
+              <button onClick={refreshReleaseFeed} disabled={releaseFeedLoading}>
+                {releaseFeedLoading ? t('dashboard.releaseNotesRefreshing') : t('dashboard.releaseNotesRefresh')}
+              </button>
+            </div>
+
+            <div className="ui-surface" style={{ display: 'grid', gap: 12 }}>
+              <div className="ui-meta">{t('dashboard.updateSource')}</div>
+              <div className="ui-code" style={{ width: 'fit-content', maxWidth: '100%', wordBreak: 'break-all' }}>{PUBLIC_UPDATE_FEED_URL}</div>
+
+              {releaseFeed ? (
+                <>
+                  <div className="ui-pill">{t('dashboard.releaseVersion')}: {releaseFeed.version}</div>
+                  {releaseFeed.previousTag ? <div className="ui-meta">{t('dashboard.previousVersion')}: {releaseFeed.previousTag}</div> : null}
+                  {formatPublishedAt(releaseFeed.publishedAt) ? (
+                    <div className="ui-meta">{t('dashboard.publishedAt')}: {formatPublishedAt(releaseFeed.publishedAt)}</div>
+                  ) : null}
+                  {releaseFeed.compareUrl ? (
+                    <a href={releaseFeed.compareUrl} target="_blank" rel="noreferrer">{t('dashboard.compareLink')}</a>
+                  ) : null}
+                  <div style={{ display: 'grid', gap: 12 }}>
+                    {releaseFeed.sections.map((section) => (
+                      <div key={section.category} className="ui-card-soft" style={{ padding: 14 }}>
+                        <div className="ui-card-title" style={{ fontSize: '0.95rem', marginBottom: 8 }}>{renderReleaseCategory(section.category)}</div>
+                        <ul style={{ margin: 0, paddingLeft: 18, color: 'var(--text-secondary)' }}>
+                          {section.items.map((item) => (
+                            <li key={`${section.category}-${item.hash}-${item.summary}`} style={{ marginBottom: 6 }}>
+                              <span>{item.summary}</span>
+                              <span className="ui-meta"> ({item.hash}, {item.author})</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-            <div style={{ marginTop: 12 }}>
-              <a
-                href={`${PUBLIC_UPDATE_FEED_URL}/release-notes.md`}
-                target="_blank"
-                rel="noreferrer"
-                style={{ color: 'inherit' }}
-              >
-                {t('dashboard.openReleaseNotes')}
-              </a>
+                  </div>
+                  <a href={`${PUBLIC_UPDATE_FEED_URL}/release-notes.md`} target="_blank" rel="noreferrer">
+                    {t('dashboard.openReleaseNotes')}
+                  </a>
+                </>
+              ) : releaseFeedError ? (
+                <div className="ui-status-error">{t('dashboard.releaseNotesError')}: {releaseFeedError}</div>
+              ) : (
+                <div className="ui-meta">{t('dashboard.releaseNotesLoading')}</div>
+              )}
             </div>
           </div>
-        ) : releaseFeedError ? (
-          <div style={{ color: '#ffb4b4', marginTop: 12, whiteSpace: 'pre-wrap' }}>
-            {t('dashboard.releaseNotesError')}: {releaseFeedError}
-          </div>
-        ) : (
-          <div style={{ opacity: 0.7, marginTop: 12 }}>{t('dashboard.releaseNotesLoading')}</div>
-        )}
-      </section>
+        </section>
+      </div>
 
-      <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 8 }}>{t('dashboard.gatewaySnapshot')}</div>
-      <pre style={{ background: 'rgba(255,255,255,0.04)', padding: 12, borderRadius: 12, whiteSpace: 'pre-wrap' }}>
-        {status ? JSON.stringify(status, null, 2) : t('dashboard.snapshotLoading')}
-      </pre>
+      {err ? <div className="ui-status-error" style={{ marginTop: 18 }}>{err}</div> : null}
+
+      <section className="ui-card" style={{ marginTop: 18 }}>
+        <div className="ui-card-body">
+          <h3 className="ui-card-title">{t('dashboard.gatewaySnapshot')}</h3>
+          <p className="ui-card-description">
+            {runtime?.gatewayPort ? `${t('dashboard.gatewayPort')}: ${runtime.gatewayPort}` : t('dashboard.snapshotLoading')}
+          </p>
+          <pre
+            className="ui-surface"
+            style={{
+              marginTop: 16,
+              whiteSpace: 'pre-wrap',
+              overflow: 'auto',
+              maxHeight: 320,
+              color: 'var(--text-secondary)',
+            }}
+          >
+            {status ? JSON.stringify(status, null, 2) : t('dashboard.snapshotLoading')}
+          </pre>
+        </div>
+      </section>
     </div>
   )
 }

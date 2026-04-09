@@ -101,7 +101,40 @@
   border-top: 1px solid var(--border-soft);
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1100px) {
+  .hc-root {
+    grid-template-columns: 224px 1fr;
+  }
+
+  .hc-sidebar {
+    padding: 18px 14px;
+  }
+
+  .hc-brand {
+    font-size: 1.2rem;
+  }
+
+  .hc-brand::after {
+    font-size: 0.76rem;
+  }
+
+  .hc-nav {
+    gap: 8px;
+    margin-top: 18px;
+  }
+
+  .hc-nav-item {
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 14px;
+  }
+
+  .hc-main {
+    padding: 18px 18px 22px;
+  }
+}
+
+@media (max-width: 720px) {
   .hc-root {
     grid-template-columns: 1fr;
   }

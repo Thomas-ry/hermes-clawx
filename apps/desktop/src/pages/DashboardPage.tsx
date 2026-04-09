@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { hermesStatus } from '../lib/hermesClient'
 import { useI18n } from '../i18n'
+import { StatCard } from '../components/StatCard'
+import { ArrowCircleIcon, ClockIcon, DashboardIcon } from '../components/icons'
 import { fetchReleaseFeedSummary, PUBLIC_UPDATE_FEED_URL, type ReleaseFeedSummary } from '../lib/releaseFeed'
 
 type UpdaterStatus = {
@@ -127,6 +129,27 @@ export function DashboardPage() {
       <div className="page-header">
         <h2 className="page-title">{t('dashboard.title')}</h2>
         <p className="page-description">{t('dashboard.description')}</p>
+      </div>
+
+      <div className="ui-stat-grid" style={{ marginBottom: 18 }}>
+        <StatCard
+          icon={<DashboardIcon width={18} height={18} />}
+          label={t('dashboard.gatewayPort')}
+          value={runtime?.gatewayPort ? String(runtime.gatewayPort) : '—'}
+          hint={t('dashboard.gatewaySnapshot')}
+        />
+        <StatCard
+          icon={<ArrowCircleIcon width={18} height={18} />}
+          label={t('dashboard.autoUpdateTitle')}
+          value={renderUpdaterStatus(updater)}
+          hint={updater?.version ?? t('dashboard.versionInfo')}
+        />
+        <StatCard
+          icon={<ClockIcon width={18} height={18} />}
+          label={t('dashboard.releaseNotesTitle')}
+          value={releaseFeed?.version ?? '—'}
+          hint={formatPublishedAt(releaseFeed?.publishedAt) ?? t('dashboard.releaseNotesLoading')}
+        />
       </div>
 
       <div className="ui-grid ui-grid-two">

@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
+import { EmptyState } from '../components/EmptyState'
+import { TerminalIcon } from '../components/icons'
 import { useI18n } from '../i18n'
 
 type LogLine = { ts: string; stream: 'stdout' | 'stderr'; line: string }
@@ -43,20 +45,28 @@ export function LogsPage() {
             </div>
           </div>
 
-          <pre
-            className="ui-surface"
-            style={{
-              margin: 0,
-              minHeight: 420,
-              maxHeight: 'calc(100vh - 280px)',
-              overflow: 'auto',
-              whiteSpace: 'pre-wrap',
-              color: 'var(--text-secondary)',
-              lineHeight: 1.6,
-            }}
-          >
-            {text || t('logs.empty')}
-          </pre>
+          {text ? (
+            <pre
+              className="ui-surface"
+              style={{
+                margin: 0,
+                minHeight: 420,
+                maxHeight: 'calc(100vh - 280px)',
+                overflow: 'auto',
+                whiteSpace: 'pre-wrap',
+                color: 'var(--text-secondary)',
+                lineHeight: 1.6,
+              }}
+            >
+              {text}
+            </pre>
+          ) : (
+            <EmptyState
+              icon={<TerminalIcon width={20} height={20} />}
+              title={t('logs.title')}
+              description={t('logs.empty')}
+            />
+          )}
         </div>
       </section>
     </div>

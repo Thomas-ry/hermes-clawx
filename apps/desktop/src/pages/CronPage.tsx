@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
+import { EmptyState } from '../components/EmptyState'
+import { ClockIcon } from '../components/icons'
 import { useI18n } from '../i18n'
 
 type CronJob = {
@@ -249,7 +251,9 @@ export function CronPage() {
                   </div>
                 </button>
               ))}
-              {jobs.length === 0 ? <div className="ui-meta">{t('cron.noJobs')}</div> : null}
+              {jobs.length === 0 ? (
+                <EmptyState icon={<ClockIcon width={20} height={20} />} title={t('cron.jobs')} description={t('cron.noJobs')} />
+              ) : null}
             </div>
           </div>
         </section>
@@ -332,7 +336,9 @@ export function CronPage() {
                           {file.fileName}
                         </button>
                       ))}
-                      {outputs.length === 0 ? <div className="ui-meta">{t('cron.noOutputs')}</div> : null}
+                      {outputs.length === 0 ? (
+                        <EmptyState icon={<ClockIcon width={20} height={20} />} title={t('cron.savedOutputs')} description={t('cron.noOutputs')} />
+                      ) : null}
                     </div>
                   </div>
 

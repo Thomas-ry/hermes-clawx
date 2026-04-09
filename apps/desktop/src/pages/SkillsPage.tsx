@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
+import { EmptyState } from '../components/EmptyState'
+import { SparklesIcon } from '../components/icons'
 import { useI18n } from '../i18n'
 
 type SkillRow = { name: string; description?: string; category?: string }
@@ -149,7 +151,9 @@ export function SkillsPage() {
                 {categories.map((item) => (
                   <div key={item} className="ui-pill">{item}</div>
                 ))}
-                {categories.length === 0 ? <div className="ui-meta">{t('skills.noCategories')}</div> : null}
+                {categories.length === 0 ? (
+                  <EmptyState icon={<SparklesIcon width={20} height={20} />} title={t('skills.categories')} description={t('skills.noCategories')} />
+                ) : null}
               </div>
               <div className="ui-meta" style={{ marginTop: 14 }}>
                 {t('skills.disabledInScope')}: {disabledSkills.length}
@@ -185,7 +189,9 @@ export function SkillsPage() {
                     </div>
                   </div>
                 ))}
-                {skills.length === 0 ? <div className="ui-meta">{t('skills.noSkills')}</div> : null}
+                {skills.length === 0 ? (
+                  <EmptyState icon={<SparklesIcon width={20} height={20} />} title={t('skills.skillsCount')} description={t('skills.noSkills')} />
+                ) : null}
               </div>
             </section>
 
@@ -210,7 +216,7 @@ export function SkillsPage() {
                   </pre>
                 </div>
               ) : (
-                <div className="ui-meta" style={{ marginTop: 12 }}>{t('skills.pickSkill')}</div>
+                <EmptyState icon={<SparklesIcon width={20} height={20} />} title={t('skills.detail')} description={t('skills.pickSkill')} />
               )}
             </section>
           </div>

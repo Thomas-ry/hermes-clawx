@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { hermesStatus } from '../lib/hermesClient'
 import { useI18n } from '../i18n'
+import { fetchReleaseFeedSummary, PUBLIC_UPDATE_FEED_URL, type ReleaseFeedSummary } from '../lib/releaseFeed'
 
 type UpdaterStatus = {
   status?: string
@@ -20,6 +21,8 @@ export function DashboardPage() {
   const [status, setStatus] = useState<unknown>(null)
   const [updater, setUpdater] = useState<UpdaterStatus | null>(null)
   const [err, setErr] = useState<string | null>(null)
+  const [releaseFeed, setReleaseFeed] = useState<ReleaseFeedSummary | null>(null)
+  const [releaseFeedError, setReleaseFeedError] = useState<string | null>(null)
 
   async function refresh() {
     try {
@@ -39,6 +42,17 @@ export function DashboardPage() {
       setUpdater(nextState as UpdaterStatus)
     })
     return unsubscribe
+  }, [])
+
+  useEffect(() => {
+    fetchReleaseFeedSummary()
+      .then((summary) => {
+        setReleaseFeed(summary)
+        setReleaseFeedError(null)
+      })
+      .catch((error) => {
+        setReleaseFeedError(String(error))
+      })
   }, [])
 
   function renderUpdaterStatus(current: UpdaterStatus | null): string {
@@ -67,6 +81,23 @@ export function DashboardPage() {
         return `${t('dashboard.updateError')}${current.error ? `: ${current.error}` : ''}`
       default:
         return t('dashboard.updaterLoading')
+    }
+  }
+
+  function renderReleaseCategory(category: string): string {
+    switch (category) {
+      case 'Features':
+        return t('dashboard.releaseCategoryFeatures')
+      case 'Fixes':
+        return t('dashboard.releaseCategoryFixes')
+      case 'Improvements':
+        return t('dashboard.releaseCategoryImprovements')
+      case 'Documentation & QA':
+        return t('dashboard.releaseCategoryDocsQa')
+      case 'Maintenance':
+        return t('dashboard.releaseCategoryMaintenance')
+      default:
+        return t('dashboard.releaseCategoryOther')
     }
   }
 
@@ -122,6 +153,52 @@ export function DashboardPage() {
             <div style={{ color: '#ffb4b4', marginTop: 8, whiteSpace: 'pre-wrap' }}>{updater.error}</div>
           ) : null}
         </div>
+      </section>
+
+      <section style={{ background: 'rgba(255,255,255,0.04)', padding: 12, borderRadius: 12, marginBottom: 16 }}>
+        <h3 style={{ marginTop: 0 }}>{t('dashboard.releaseNotesTitle')}</h3>
+        <p style={{ opacity: 0.8, marginTop: 4 }}>{t('dashboard.releaseNotesDescription')}</p>
+        <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 8 }}>{t('dashboard.updateSource')}</div>
+        <div style={{ fontSize: 12, opacity: 0.9, wordBreak: 'break-all' }}>{PUBLIC_UPDATE_FEED_URL}</div>
+
+        {releaseFeed ? (
+          <div style={{ marginTop: 12 }}>
+            <div style={{ fontWeight: 600 }}>
+              {t('dashboard.releaseVersion')}: {releaseFeed.version} ({releaseFeed.tag})
+            </div>
+            {releaseFeed.previousTag ? (
+              <div style={{ fontSize: 12, opacity: 0.75, marginTop: 6 }}>
+                {t('dashboard.previousVersion')}: {releaseFeed.previousTag}
+              </div>
+            ) : null}
+            {releaseFeed.compareUrl ? (
+              <div style={{ fontSize: 12, opacity: 0.85, marginTop: 6, wordBreak: 'break-all' }}>
+                {t('dashboard.compareLink')}: {releaseFeed.compareUrl}
+              </div>
+            ) : null}
+            <div style={{ marginTop: 12, display: 'grid', gap: 12 }}>
+              {releaseFeed.sections.map((section) => (
+                <div key={section.category}>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{renderReleaseCategory(section.category)}</div>
+                  <ul style={{ margin: '8px 0 0 18px', padding: 0 }}>
+                    {section.items.map((item) => (
+                      <li key={`${section.category}-${item.hash}-${item.summary}`} style={{ marginBottom: 6 }}>
+                        <span>{item.summary}</span>
+                        <span style={{ opacity: 0.65 }}> ({item.hash}, {item.author})</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : releaseFeedError ? (
+          <div style={{ color: '#ffb4b4', marginTop: 12, whiteSpace: 'pre-wrap' }}>
+            {t('dashboard.releaseNotesError')}: {releaseFeedError}
+          </div>
+        ) : (
+          <div style={{ opacity: 0.7, marginTop: 12 }}>{t('dashboard.releaseNotesLoading')}</div>
+        )}
       </section>
 
       <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 8 }}>{t('dashboard.gatewaySnapshot')}</div>

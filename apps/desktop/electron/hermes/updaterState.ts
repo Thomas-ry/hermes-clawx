@@ -1,4 +1,14 @@
 export type UpdaterState = {
+  status:
+    | 'idle'
+    | 'dev-only'
+    | 'packaged-required'
+    | 'checking'
+    | 'available'
+    | 'not-available'
+    | 'downloading'
+    | 'downloaded'
+    | 'error'
   available: boolean
   checking: boolean
   downloading: boolean
@@ -6,13 +16,13 @@ export type UpdaterState = {
   version: string | null
   downloadedVersion: string | null
   progressPercent: number | null
-  message: string
   error: string | null
   lastCheckedAt: string | null
 }
 
 export function createInitialUpdaterState(): UpdaterState {
   return {
+    status: 'idle',
     available: false,
     checking: false,
     downloading: false,
@@ -20,7 +30,6 @@ export function createInitialUpdaterState(): UpdaterState {
     version: null,
     downloadedVersion: null,
     progressPercent: null,
-    message: 'Updates not checked yet.',
     error: null,
     lastCheckedAt: null,
   }

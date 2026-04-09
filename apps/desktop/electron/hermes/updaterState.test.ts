@@ -4,6 +4,7 @@ import { createInitialUpdaterState, mergeUpdaterState } from './updaterState'
 describe('updaterState', () => {
   it('creates a neutral initial state', () => {
     expect(createInitialUpdaterState()).toEqual({
+      status: 'idle',
       available: false,
       checking: false,
       downloading: false,
@@ -11,7 +12,6 @@ describe('updaterState', () => {
       version: null,
       downloadedVersion: null,
       progressPercent: null,
-      message: 'Updates not checked yet.',
       error: null,
       lastCheckedAt: null,
     })
@@ -20,14 +20,14 @@ describe('updaterState', () => {
   it('merges patches immutably', () => {
     const initial = createInitialUpdaterState()
     const next = mergeUpdaterState(initial, {
+      status: 'checking',
       checking: true,
-      message: 'Checking for updates…',
     })
 
     expect(next).toEqual({
       ...initial,
+      status: 'checking',
       checking: true,
-      message: 'Checking for updates…',
     })
     expect(initial.checking).toBe(false)
   })

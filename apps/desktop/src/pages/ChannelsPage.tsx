@@ -129,6 +129,49 @@ export function ChannelsPage() {
     load()
   }, [])
 
+  function translateFieldLabel(label: string): string {
+    switch (label) {
+      case 'Bot token':
+        return t('channels.botToken')
+      case 'Allowed users':
+        return t('channels.allowedUsers')
+      case 'Home channel':
+        return t('channels.homeChannel')
+      case 'App token':
+        return t('channels.appToken')
+      case 'HTTP URL':
+        return t('channels.httpUrl')
+      case 'Account':
+        return t('channels.account')
+      case 'Enabled':
+        return t('channels.enabled')
+      case 'Mode':
+        return t('channels.mode')
+      case 'Email address':
+        return t('channels.emailAddress')
+      case 'Password / app password':
+        return t('channels.password')
+      case 'IMAP host':
+        return t('channels.imapHost')
+      case 'SMTP host':
+        return t('channels.smtpHost')
+      case 'Allowed senders':
+        return t('channels.allowedSenders')
+      case 'Home address':
+        return t('channels.homeAddress')
+      case 'Homeserver':
+        return t('channels.homeserver')
+      case 'Access token':
+        return t('channels.accessToken')
+      case 'User ID':
+        return t('channels.userId')
+      case 'Home room':
+        return t('channels.homeRoom')
+      default:
+        return label
+    }
+  }
+
   return (
     <div style={{ maxWidth: 1000 }}>
       <h2>{t('channels.title')}</h2>
@@ -160,7 +203,10 @@ export function ChannelsPage() {
             </p>
             {channel.fields.map((field) => (
               <label key={field.key} style={{ display: 'block', marginBottom: 10 }}>
-                <div style={{ fontSize: 12, opacity: 0.8 }}>{field.key}</div>
+                <div style={{ fontSize: 12, opacity: 0.95 }}>{translateFieldLabel(field.label)}</div>
+                <div style={{ fontSize: 11, opacity: 0.6, marginBottom: 4 }}>
+                  {t('channels.envKey')}: {field.key}
+                </div>
                 <input
                   value={draft[field.key] ?? ''}
                   onChange={(e) => setDraft((prev) => ({ ...prev, [field.key]: e.target.value }))}

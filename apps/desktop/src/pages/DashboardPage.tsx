@@ -3,6 +3,7 @@ import { hermesStatus } from '../lib/hermesClient'
 import { useI18n } from '../i18n'
 
 type UpdaterStatus = {
+  status?: string
   available?: boolean
   checking?: boolean
   downloading?: boolean
@@ -10,7 +11,6 @@ type UpdaterStatus = {
   version?: string | null
   downloadedVersion?: string | null
   progressPercent?: number | null
-  message?: string
   error?: string | null
   lastCheckedAt?: string | null
 }
@@ -40,6 +40,35 @@ export function DashboardPage() {
     })
     return unsubscribe
   }, [])
+
+  function renderUpdaterStatus(current: UpdaterStatus | null): string {
+    if (!current) {
+      return t('dashboard.updaterLoading')
+    }
+
+    switch (current.status) {
+      case 'idle':
+        return t('dashboard.updateIdle')
+      case 'dev-only':
+        return t('dashboard.updateDevOnly')
+      case 'packaged-required':
+        return t('dashboard.updatePackagedRequired')
+      case 'checking':
+        return t('dashboard.updateChecking')
+      case 'available':
+        return `${t('dashboard.updateAvailable')} ${current.version ?? ''}`.trim()
+      case 'not-available':
+        return t('dashboard.updateNotAvailable')
+      case 'downloading':
+        return `${t('dashboard.updateDownloading')} ${current.progressPercent?.toFixed(1) ?? '0.0'}%`
+      case 'downloaded':
+        return `${t('dashboard.updateDownloaded')} ${current.downloadedVersion ?? current.version ?? ''}`.trim()
+      case 'error':
+        return `${t('dashboard.updateError')}${current.error ? `: ${current.error}` : ''}`
+      default:
+        return t('dashboard.updaterLoading')
+    }
+  }
 
   return (
     <div style={{ maxWidth: 900 }}>
@@ -75,9 +104,24 @@ export function DashboardPage() {
             {t('dashboard.restartInstall')}
           </button>
         </div>
-        <pre style={{ background: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 12, whiteSpace: 'pre-wrap', margin: 0 }}>
-          {JSON.stringify(updater ?? { message: t('dashboard.updaterLoading') }, null, 2)}
-        </pre>
+        <div style={{ background: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 12 }}>
+          <div style={{ fontWeight: 600, marginBottom: 8 }}>{renderUpdaterStatus(updater)}</div>
+          <div style={{ fontSize: 12, opacity: 0.75 }}>{t('dashboard.updateSource')}</div>
+          <div style={{ fontSize: 12, opacity: 0.9, wordBreak: 'break-all' }}>https://thomas-ry.github.io/hermes-clawT/updates</div>
+          {updater?.lastCheckedAt ? (
+            <div style={{ fontSize: 12, opacity: 0.75, marginTop: 8 }}>
+              {t('dashboard.lastChecked')}: {updater.lastCheckedAt}
+            </div>
+          ) : null}
+          {(updater?.version || updater?.downloadedVersion) ? (
+            <div style={{ fontSize: 12, opacity: 0.75, marginTop: 4 }}>
+              {t('dashboard.versionInfo')}: {updater.downloadedVersion ?? updater.version}
+            </div>
+          ) : null}
+          {updater?.error ? (
+            <div style={{ color: '#ffb4b4', marginTop: 8, whiteSpace: 'pre-wrap' }}>{updater.error}</div>
+          ) : null}
+        </div>
       </section>
 
       <pre style={{ background: 'rgba(255,255,255,0.04)', padding: 12, borderRadius: 12, whiteSpace: 'pre-wrap' }}>

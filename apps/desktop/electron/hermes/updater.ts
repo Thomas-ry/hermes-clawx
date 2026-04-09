@@ -22,18 +22,19 @@ export class ClawTUpdater {
   private wireEvents() {
     autoUpdater.on('checking-for-update', () => {
       this.updateState({
+        status: 'checking',
         checking: true,
         downloading: false,
         downloaded: false,
         progressPercent: null,
         error: null,
-        message: 'Checking for updates…',
         lastCheckedAt: new Date().toISOString(),
       })
     })
 
     autoUpdater.on('update-available', (info) => {
       this.updateState({
+        status: 'available',
         checking: false,
         available: true,
         version: info.version,
@@ -41,50 +42,49 @@ export class ClawTUpdater {
         downloading: false,
         progressPercent: 0,
         error: null,
-        message: `Update ${info.version} is available.`,
       })
     })
 
     autoUpdater.on('update-not-available', () => {
       this.updateState({
+        status: 'not-available',
         checking: false,
         available: false,
         downloaded: false,
         downloading: false,
         progressPercent: null,
         error: null,
-        message: 'You are on the latest version.',
       })
     })
 
     autoUpdater.on('download-progress', (progress) => {
       this.updateState({
+        status: 'downloading',
         downloading: true,
         downloaded: false,
         progressPercent: progress.percent,
         error: null,
-        message: `Downloading update… ${progress.percent.toFixed(1)}%`,
       })
     })
 
     autoUpdater.on('update-downloaded', (info) => {
       this.updateState({
+        status: 'downloaded',
         checking: false,
         downloading: false,
         downloaded: true,
         downloadedVersion: info.version,
         progressPercent: 100,
         error: null,
-        message: `Update ${info.version} downloaded. Restart to install.`,
       })
     })
 
     autoUpdater.on('error', (error) => {
       this.updateState({
+        status: 'error',
         checking: false,
         downloading: false,
         error: String(error?.message ?? error),
-        message: 'Update check failed.',
       })
     })
   }
@@ -98,7 +98,7 @@ export class ClawTUpdater {
 
     if (!app.isPackaged) {
       this.updateState({
-        message: 'Auto-update is available only in packaged builds.',
+        status: 'dev-only',
       })
       return
     }
@@ -115,7 +115,7 @@ export class ClawTUpdater {
   async checkForUpdates() {
     if (!app.isPackaged) {
       this.updateState({
-        message: 'Package the app first to test auto-update.',
+        status: 'packaged-required',
       })
       return this.state
     }

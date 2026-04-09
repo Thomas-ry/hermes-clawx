@@ -7,10 +7,8 @@
   "electronUpdaterCompatibility": ">=2.16",
   "publish": [
     {
-      "provider": "github",
-      "owner": "Thomas-ry",
-      "repo": "hermes-clawT",
-      "private": true
+      "provider": "generic",
+      "url": "https://thomas-ry.github.io/hermes-clawT/updates"
     }
   ],
   "directories": {

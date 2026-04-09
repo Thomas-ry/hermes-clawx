@@ -119,11 +119,16 @@ git push origin v0.1.1
 
 ### 当前注意事项
 
-- 现在的发布源是私有 GitHub Releases
-- 根据 `electron-builder` 官方文档，私有 GitHub 更新仓库需要客户端机器具备 `GH_TOKEN`，不适合面向普通终端用户直接发放
-- 如果后面要给普通用户无感更新，建议下一步把 update provider 改成：
-  - 公有 GitHub Releases，或
-  - 自己的静态更新源（generic provider / CDN）
+- 现在的更新源已切到 `generic provider`
+- 默认更新地址是：`https://thomas-ry.github.io/hermes-clawT/updates`
+- `release.yml` 会把 `latest*.yml`、安装包和 blockmap 部署到 GitHub Pages，供普通用户公开访问
+- 如果后面要换成 Cloudflare R2、S3 或自有 CDN，只需要改 `apps/desktop/electron-builder.json5` 里的 `publish.url`
+
+### GitHub Pages 准备
+
+- 在仓库 `Settings -> Pages` 中把发布源切到 `GitHub Actions`
+- 首次运行 `release` 工作流后，会自动生成公开的 `/updates` 静态目录
+- 桌面端自动更新会从这个公开地址拉取元数据，不再依赖私有 GitHub Release 凭证
 
 ## 运行时说明
 

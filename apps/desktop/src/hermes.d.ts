@@ -25,11 +25,21 @@ declare global {
         resume: (params: unknown) => Promise<unknown>
         run: (params: unknown) => Promise<unknown>
         remove: (params: unknown) => Promise<unknown>
+        outputs: {
+          list: (params: unknown) => Promise<unknown>
+          read: (params: unknown) => Promise<unknown>
+        }
       }
       skills: {
         categories: (params?: unknown) => Promise<unknown>
         list: (params?: unknown) => Promise<unknown>
         view: (params: unknown) => Promise<unknown>
+        all: () => Promise<unknown>
+        viewRaw: (params: unknown) => Promise<unknown>
+        disabled: {
+          get: (params?: unknown) => Promise<unknown>
+          save: (params: unknown) => Promise<unknown>
+        }
       }
       env: {
         get: () => Promise<Record<string, string>>

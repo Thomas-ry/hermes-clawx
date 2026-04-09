@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState, type CSSProperties } from 'react'
 
 type SkillRow = { name: string; description?: string; category?: string }
-type SkillsListResult = { skills?: SkillRow[] }
 type SkillViewResult = {
   success?: boolean
   skill?: {
@@ -14,7 +13,21 @@ type SkillViewResult = {
   }
   content?: string
   path?: string
+  error?: string
 }
+type DisabledSkillsResult = { success?: boolean; disabled?: string[] }
+
+const PLATFORM_OPTIONS = [
+  { value: 'global', label: 'Global default' },
+  { value: 'cli', label: 'CLI' },
+  { value: 'telegram', label: 'Telegram' },
+  { value: 'discord', label: 'Discord' },
+  { value: 'slack', label: 'Slack' },
+  { value: 'signal', label: 'Signal' },
+  { value: 'whatsapp', label: 'WhatsApp' },
+  { value: 'email', label: 'Email' },
+  { value: 'matrix', label: 'Matrix' },
+] as const
 
 const panelStyle: CSSProperties = {
   background: 'rgba(255,255,255,0.04)',
@@ -23,18 +36,20 @@ const panelStyle: CSSProperties = {
 }
 
 export function SkillsPage() {
-  const [categoriesRaw, setCategoriesRaw] = useState<unknown>(null)
+  const [disabledSkills, setDisabledSkills] = useState<string[]>([])
   const [skills, setSkills] = useState<SkillRow[]>([])
   const [selectedSkillName, setSelectedSkillName] = useState<string | null>(null)
   const [selectedSkill, setSelectedSkill] = useState<SkillViewResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [category, setCategory] = useState<string>('')
+  const [platform, setPlatform] = useState<string>('global')
+  const [busySkillName, setBusySkillName] = useState<string | null>(null)
 
   async function loadSkill(name: string) {
     try {
       setError(null)
       setSelectedSkillName(name)
-      const details = (await window.hermes.skills.view({ name })) as SkillViewResult
+      const details = (await window.hermes.skills.viewRaw({ name })) as SkillViewResult
       setSelectedSkill(details)
     } catch (e) {
       setError(String(e))
@@ -44,10 +59,18 @@ export function SkillsPage() {
   const refresh = useCallback(async (preferredSkillName?: string | null) => {
     try {
       setError(null)
-      const cats = await window.hermes.skills.categories()
-      setCategoriesRaw(cats)
-      const list = (await window.hermes.skills.list(category ? { category } : {})) as SkillsListResult
-      const nextSkills = list.skills ?? []
+      const [allSkills, disabledResult] = await Promise.all([
+        window.hermes.skills.all(),
+        window.hermes.skills.disabled.get({ platform: platform === 'global' ? null : platform }),
+      ])
+      const nextDisabledSkills = ((disabledResult as DisabledSkillsResult).disabled ?? []).slice().sort((left, right) =>
+        left.localeCompare(right),
+      )
+      setDisabledSkills(nextDisabledSkills)
+
+      const nextSkills = ((allSkills as SkillRow[]) ?? []).filter((skill) =>
+        category ? (skill.category ?? '').toLowerCase().includes(category.toLowerCase()) : true,
+      )
       setSkills(nextSkills)
 
       const nextSelectedName =
@@ -64,18 +87,52 @@ export function SkillsPage() {
     } catch (e) {
       setError(String(e))
     }
-  }, [category])
+  }, [category, platform])
 
   useEffect(() => {
     refresh(selectedSkillName)
-  }, [refresh, category, selectedSkillName])
+  }, [refresh, selectedSkillName])
+
+  const categories = [...new Set(skills.map((skill) => skill.category ?? 'uncategorized'))].sort((left, right) =>
+    left.localeCompare(right),
+  )
+
+  async function toggleSkill(name: string, shouldDisable: boolean) {
+    try {
+      setBusySkillName(name)
+      setError(null)
+      const nextDisabled = shouldDisable
+        ? [...new Set([...disabledSkills, name])].sort((left, right) => left.localeCompare(right))
+        : disabledSkills.filter((item) => item !== name)
+
+      await window.hermes.skills.disabled.save({
+        platform: platform === 'global' ? null : platform,
+        disabled: nextDisabled,
+      })
+      await refresh(selectedSkillName ?? name)
+    } catch (e) {
+      setError(String(e))
+    } finally {
+      setBusySkillName(null)
+    }
+  }
 
   return (
     <div style={{ maxWidth: 1120 }}>
       <h2>Skills</h2>
-      <p style={{ opacity: 0.8, marginTop: 4 }}>Browse installed skills and inspect their `SKILL.md` content.</p>
+      <p style={{ opacity: 0.8, marginTop: 4 }}>Browse installed skills, inspect their `SKILL.md`, and enable or disable them per surface.</p>
 
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 12 }}>
+        <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <span style={{ opacity: 0.8 }}>Scope</span>
+          <select value={platform} onChange={(e) => setPlatform(e.target.value)}>
+            {PLATFORM_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
         <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <span style={{ opacity: 0.8 }}>Category</span>
           <input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="(optional)" />
@@ -88,26 +145,57 @@ export function SkillsPage() {
       <div style={{ display: 'grid', gridTemplateColumns: '0.8fr 1fr 1.2fr', gap: 16, marginTop: 16 }}>
         <div style={panelStyle}>
           <h3 style={{ marginTop: 0 }}>Categories</h3>
-          <pre style={{ whiteSpace: 'pre-wrap' }}>{categoriesRaw ? JSON.stringify(categoriesRaw, null, 2) : 'Loading...'}</pre>
+          <div style={{ display: 'grid', gap: 8 }}>
+            {categories.map((item) => (
+              <div key={item} style={{ opacity: 0.85 }}>
+                {item}
+              </div>
+            ))}
+            {categories.length === 0 ? <div style={{ opacity: 0.7 }}>No categories found.</div> : null}
+          </div>
+          <div style={{ fontSize: 12, opacity: 0.65, marginTop: 12 }}>
+            Disabled in this scope: {disabledSkills.length}
+          </div>
         </div>
 
         <div style={panelStyle}>
           <h3 style={{ marginTop: 0 }}>Skills ({skills.length})</h3>
           <div style={{ display: 'grid', gap: 10 }}>
             {skills.map((skill) => (
-              <button
+              <div
                 key={skill.name}
-                onClick={() => loadSkill(skill.name)}
                 style={{
-                  textAlign: 'left',
                   border: skill.name === selectedSkillName ? '1px solid rgba(231, 149, 78, 0.8)' : '1px solid rgba(255,255,255,0.08)',
                   background: 'rgba(255,255,255,0.03)',
+                  borderRadius: 8,
+                  padding: 10,
                 }}
               >
-                <div style={{ fontWeight: 600 }}>{skill.name}</div>
-                <div style={{ opacity: 0.7, fontSize: 12 }}>{skill.category ?? ''}</div>
-                <div style={{ opacity: 0.85, marginTop: 6, whiteSpace: 'pre-wrap' }}>{skill.description ?? ''}</div>
-              </button>
+                <button
+                  onClick={() => loadSkill(skill.name)}
+                  style={{ width: '100%', textAlign: 'left', padding: 0, background: 'transparent', border: 'none' }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                    <div style={{ fontWeight: 600 }}>{skill.name}</div>
+                    <div style={{ fontSize: 12, opacity: 0.7 }}>
+                      {disabledSkills.includes(skill.name) ? 'Disabled' : 'Enabled'}
+                    </div>
+                  </div>
+                  <div style={{ opacity: 0.7, fontSize: 12 }}>{skill.category ?? ''}</div>
+                  <div style={{ opacity: 0.85, marginTop: 6, whiteSpace: 'pre-wrap' }}>{skill.description ?? ''}</div>
+                </button>
+                <button
+                  onClick={() => toggleSkill(skill.name, !disabledSkills.includes(skill.name))}
+                  disabled={busySkillName === skill.name}
+                  style={{ marginTop: 10 }}
+                >
+                  {busySkillName === skill.name
+                    ? 'Saving…'
+                    : disabledSkills.includes(skill.name)
+                      ? 'Enable skill'
+                      : 'Disable skill'}
+                </button>
+              </div>
             ))}
             {skills.length === 0 ? <div style={{ opacity: 0.7 }}>No skills found.</div> : null}
           </div>
@@ -125,6 +213,7 @@ export function SkillsPage() {
               <div style={{ fontSize: 12, opacity: 0.65, marginTop: 8 }}>
                 Path: {selectedSkill.skill?.path ?? selectedSkill.path ?? '(unknown)'}
               </div>
+              {selectedSkill.error ? <div style={{ color: '#ffb4b4', marginTop: 8 }}>{selectedSkill.error}</div> : null}
               {selectedSkill.skill?.files?.length ? (
                 <div style={{ fontSize: 12, opacity: 0.65, marginTop: 4 }}>
                   Files: {selectedSkill.skill.files.join(', ')}

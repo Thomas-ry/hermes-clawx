@@ -6,6 +6,7 @@
   "packageManager": "pnpm@10.32.1",
   "type": "module",
   "scripts": {
+    "icons:build": "python3 ./scripts/generate-icons.py",
     "runtime:build": "node ./scripts/build-hermes-runtime.mjs",
     "dev": "pnpm -C apps/desktop dev",
     "build": "pnpm -C apps/desktop build",

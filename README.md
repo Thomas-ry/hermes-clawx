@@ -28,11 +28,45 @@ pnpm dev
 ## 打包（本机）
 
 ```bash
+pnpm icons:build
 pnpm runtime:build
 pnpm package:mac     # 或 package:win / package:linux
 ```
 
 如果没有先执行 `pnpm runtime:build`，打包命令会直接失败并提示缺少 bundled runtime。
+
+## 发布准备
+
+### 图标与品牌
+
+- 桌面端图标由 `scripts/generate-icons.py` 生成
+- 产物会写到 `apps/desktop/build/icon.png`、`apps/desktop/build/icon.ico`、`apps/desktop/build/icon.icns`
+- 开发模式窗口图标使用 `apps/desktop/public/clawt-icon.png`
+
+### 版本策略
+
+- 使用语义化版本：`MAJOR.MINOR.PATCH`
+- `package.json` 与 `apps/desktop/package.json` 保持同版本
+- 建议发布节奏：
+  - `0.x`：快速迭代内部测试版
+  - `1.0.0`：三平台安装包、签名链路、更新说明全部稳定后再发
+
+### macOS 签名与公证
+
+- `electron-builder` 会在检测到 Apple Developer 身份时自动尝试签名
+- 推荐在 CI Secrets 配置：
+  - `CSC_LINK`
+  - `CSC_KEY_PASSWORD`
+  - `APPLE_ID`
+  - `APPLE_APP_SPECIFIC_PASSWORD`
+  - `APPLE_TEAM_ID`
+- 本地调试可先不签名；正式分发给普通用户前再开启签名和 notarization
+
+### Windows / Linux
+
+- Windows 安装包使用 NSIS，建议后续补充 `CSC_LINK` / EV 证书后再正式分发
+- Linux 目前输出 `AppImage` 与 `deb`，适合内测和团队内部分发
+- 如果要做自动更新，建议下一步补 `latest.yml` 分发托管和 release notes 生成
 
 ## CI 打包
 

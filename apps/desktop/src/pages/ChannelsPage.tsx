@@ -53,6 +53,38 @@ const CHANNELS: ChannelConfig[] = [
       { key: 'SIGNAL_HOME_CHANNEL', label: 'Home channel', placeholder: '+1234567890' },
     ],
   },
+  {
+    title: 'WhatsApp',
+    description: 'QR-paired bridge mode and allowlist configuration.',
+    fields: [
+      { key: 'WHATSAPP_ENABLED', label: 'Enabled', placeholder: 'true' },
+      { key: 'WHATSAPP_MODE', label: 'Mode', placeholder: 'self-chat or bot' },
+      { key: 'WHATSAPP_ALLOWED_USERS', label: 'Allowed users', placeholder: '15551234567,*' },
+    ],
+  },
+  {
+    title: 'Email',
+    description: 'Inbound mailbox plus default recipient for cron delivery.',
+    fields: [
+      { key: 'EMAIL_ADDRESS', label: 'Email address', placeholder: 'hermes@example.com' },
+      { key: 'EMAIL_PASSWORD', label: 'Password / app password' },
+      { key: 'EMAIL_IMAP_HOST', label: 'IMAP host', placeholder: 'imap.gmail.com' },
+      { key: 'EMAIL_SMTP_HOST', label: 'SMTP host', placeholder: 'smtp.gmail.com' },
+      { key: 'EMAIL_ALLOWED_USERS', label: 'Allowed senders', placeholder: 'alice@example.com,bob@example.com' },
+      { key: 'EMAIL_HOME_ADDRESS', label: 'Home address', placeholder: 'you@example.com' },
+    ],
+  },
+  {
+    title: 'Matrix',
+    description: 'Homeserver-based chat with token or password login.',
+    fields: [
+      { key: 'MATRIX_HOMESERVER', label: 'Homeserver', placeholder: 'https://matrix.example.org' },
+      { key: 'MATRIX_ACCESS_TOKEN', label: 'Access token' },
+      { key: 'MATRIX_USER_ID', label: 'User ID', placeholder: '@bot:matrix.example.org' },
+      { key: 'MATRIX_ALLOWED_USERS', label: 'Allowed users', placeholder: '@you:matrix.org,@ops:matrix.org' },
+      { key: 'MATRIX_HOME_ROOM', label: 'Home room', placeholder: '!abc123:matrix.org' },
+    ],
+  },
 ]
 
 export function ChannelsPage() {

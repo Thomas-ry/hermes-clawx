@@ -33,7 +33,9 @@ let win: BrowserWindow | null
 
 function createWindow() {
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
+    icon: VITE_DEV_SERVER_URL
+      ? path.join(process.env.VITE_PUBLIC, 'clawt-icon.png')
+      : path.join(process.env.APP_ROOT, 'build', 'icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
       contextIsolation: true,

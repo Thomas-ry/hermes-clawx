@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "icons:build": "python3 ../../scripts/generate-icons.py",
     "package": "node ../../scripts/require-runtime.mjs && pnpm build && electron-builder",
     "package:mac": "node ../../scripts/require-runtime.mjs && pnpm build && electron-builder --mac",
     "package:win": "node ../../scripts/require-runtime.mjs && pnpm build && electron-builder --win",

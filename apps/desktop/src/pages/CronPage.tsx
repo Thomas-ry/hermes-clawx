@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useState, type CSSProperties } from 'react'
 
 type CronJob = {
   job_id: string
@@ -20,6 +20,21 @@ type CronListResult = {
   jobs?: CronJob[]
 }
 
+type CronOutputSummary = {
+  fileName: string
+  path: string
+}
+
+type CronOutputListResult = {
+  success?: boolean
+  files?: CronOutputSummary[]
+}
+
+type CronOutputReadResult = {
+  success?: boolean
+  file?: CronOutputSummary & { content?: string }
+}
+
 const panelStyle: CSSProperties = {
   background: 'rgba(255,255,255,0.04)',
   padding: 12,
@@ -31,6 +46,9 @@ export function CronPage() {
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busyAction, setBusyAction] = useState<string | null>(null)
+  const [outputs, setOutputs] = useState<CronOutputSummary[]>([])
+  const [selectedOutputPath, setSelectedOutputPath] = useState<string | null>(null)
+  const [selectedOutputContent, setSelectedOutputContent] = useState<string>('')
 
   const [schedule, setSchedule] = useState('every 1h')
   const [prompt, setPrompt] = useState('Write a short daily status note.')
@@ -44,7 +62,35 @@ export function CronPage() {
 
   const selectedJob = jobs.find((job) => job.job_id === selectedJobId) ?? null
 
-  async function refresh(preferredJobId?: string | null) {
+  const loadOutputs = useCallback(async (jobId: string | null, preferredPath?: string | null) => {
+    if (!jobId) {
+      setOutputs([])
+      setSelectedOutputPath(null)
+      setSelectedOutputContent('')
+      return
+    }
+
+    const result = (await window.hermes.cron.outputs.list({ job_id: jobId })) as CronOutputListResult
+    const nextFiles = result.files ?? []
+    setOutputs(nextFiles)
+
+    const nextPath =
+      preferredPath && nextFiles.some((file) => file.path === preferredPath)
+        ? preferredPath
+        : nextFiles[0]?.path ?? null
+
+    setSelectedOutputPath(nextPath)
+
+    if (!nextPath) {
+      setSelectedOutputContent('')
+      return
+    }
+
+    const loaded = (await window.hermes.cron.outputs.read({ job_id: jobId, path: nextPath })) as CronOutputReadResult
+    setSelectedOutputContent(loaded.file?.content ?? '')
+  }, [])
+
+  const refresh = useCallback(async (preferredJobId?: string | null) => {
     try {
       setError(null)
       const result = (await window.hermes.cron.list({ include_disabled: true })) as CronListResult
@@ -63,16 +109,18 @@ export function CronPage() {
         setEditSchedule(nextSelected.schedule ?? '')
         setEditPrompt(nextSelected.prompt_preview ?? '')
         setEditDeliver(Array.isArray(nextSelected.deliver) ? nextSelected.deliver.join(',') : String(nextSelected.deliver ?? 'local'))
+        await loadOutputs(nextSelected.job_id)
       } else {
         setEditName('')
         setEditSchedule('')
         setEditPrompt('')
         setEditDeliver('local')
+        await loadOutputs(null)
       }
     } catch (e) {
       setError(String(e))
     }
-  }
+  }, [loadOutputs])
 
   async function createJob() {
     try {
@@ -128,7 +176,7 @@ export function CronPage() {
 
   useEffect(() => {
     refresh()
-  }, [])
+  }, [refresh])
 
   return (
     <div style={{ maxWidth: 1120 }}>
@@ -251,6 +299,43 @@ export function CronPage() {
               <button onClick={() => runJobAction('remove', selectedJob.job_id)} disabled={busyAction === `remove:${selectedJob.job_id}`}>
                 Delete
               </button>
+              <button onClick={() => loadOutputs(selectedJob.job_id, selectedOutputPath)} disabled={busyAction !== null}>
+                Refresh outputs
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '0.85fr 1.15fr', gap: 16, marginTop: 16 }}>
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 8 }}>Saved outputs</div>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  {outputs.map((file) => (
+                    <button
+                      key={file.path}
+                      onClick={() => {
+                        setSelectedOutputPath(file.path)
+                        window.hermes.cron.outputs
+                          .read({ job_id: selectedJob.job_id, path: file.path })
+                          .then((result) => setSelectedOutputContent(((result as CronOutputReadResult).file?.content ?? '')))
+                          .catch((e) => setError(String(e)))
+                      }}
+                      style={{
+                        textAlign: 'left',
+                        border: file.path === selectedOutputPath ? '1px solid rgba(231, 149, 78, 0.8)' : '1px solid rgba(255,255,255,0.08)',
+                        background: 'rgba(255,255,255,0.03)',
+                      }}
+                    >
+                      {file.fileName}
+                    </button>
+                  ))}
+                  {outputs.length === 0 ? <div style={{ opacity: 0.7 }}>No saved outputs for this job yet.</div> : null}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 8 }}>Output preview</div>
+                <pre style={{ whiteSpace: 'pre-wrap', maxHeight: 360, overflow: 'auto', margin: 0 }}>
+                  {selectedOutputContent || 'Pick an output to preview it here.'}
+                </pre>
+              </div>
             </div>
           </>
         ) : (

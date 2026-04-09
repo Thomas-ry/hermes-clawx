@@ -29,11 +29,21 @@ contextBridge.exposeInMainWorld('hermes', {
     resume: (params: unknown) => ipcRenderer.invoke('hermes.cron.resume', params),
     run: (params: unknown) => ipcRenderer.invoke('hermes.cron.run', params),
     remove: (params: unknown) => ipcRenderer.invoke('hermes.cron.remove', params),
+    outputs: {
+      list: (params: unknown) => ipcRenderer.invoke('hermes.cron.outputs.list', params),
+      read: (params: unknown) => ipcRenderer.invoke('hermes.cron.outputs.read', params),
+    },
   },
   skills: {
     categories: (params?: unknown) => ipcRenderer.invoke('hermes.skills.categories', params),
     list: (params?: unknown) => ipcRenderer.invoke('hermes.skills.list', params),
     view: (params: unknown) => ipcRenderer.invoke('hermes.skills.view', params),
+    all: () => ipcRenderer.invoke('hermes.skills.all'),
+    viewRaw: (params: unknown) => ipcRenderer.invoke('hermes.skills.viewRaw', params),
+    disabled: {
+      get: (params?: unknown) => ipcRenderer.invoke('hermes.skills.disabled.get', params),
+      save: (params: unknown) => ipcRenderer.invoke('hermes.skills.disabled.save', params),
+    },
   },
   env: {
     get: () => ipcRenderer.invoke('hermes.env.get'),

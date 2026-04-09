@@ -17,7 +17,7 @@ type UpdaterStatus = {
 }
 
 export function DashboardPage() {
-  const { t } = useI18n()
+  const { language, t } = useI18n()
   const [status, setStatus] = useState<unknown>(null)
   const [updater, setUpdater] = useState<UpdaterStatus | null>(null)
   const [err, setErr] = useState<string | null>(null)
@@ -101,6 +101,20 @@ export function DashboardPage() {
     }
   }
 
+  function formatPublishedAt(value?: string): string | null {
+    if (!value) {
+      return null
+    }
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) {
+      return value
+    }
+    return new Intl.DateTimeFormat(language === 'zh' ? 'zh-CN' : 'en-US', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }).format(date)
+  }
+
   return (
     <div style={{ maxWidth: 900 }}>
       <h2>{t('dashboard.title')}</h2>
@@ -171,6 +185,11 @@ export function DashboardPage() {
                 {t('dashboard.previousVersion')}: {releaseFeed.previousTag}
               </div>
             ) : null}
+            {formatPublishedAt(releaseFeed.publishedAt) ? (
+              <div style={{ fontSize: 12, opacity: 0.75, marginTop: 6 }}>
+                {t('dashboard.publishedAt')}: {formatPublishedAt(releaseFeed.publishedAt)}
+              </div>
+            ) : null}
             {releaseFeed.compareUrl ? (
               <div style={{ fontSize: 12, opacity: 0.85, marginTop: 6, wordBreak: 'break-all' }}>
                 {t('dashboard.compareLink')}: {releaseFeed.compareUrl}
@@ -190,6 +209,16 @@ export function DashboardPage() {
                   </ul>
                 </div>
               ))}
+            </div>
+            <div style={{ marginTop: 12 }}>
+              <a
+                href={`${PUBLIC_UPDATE_FEED_URL}/release-notes.md`}
+                target="_blank"
+                rel="noreferrer"
+                style={{ color: 'inherit' }}
+              >
+                {t('dashboard.openReleaseNotes')}
+              </a>
             </div>
           </div>
         ) : releaseFeedError ? (

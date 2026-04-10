@@ -305,7 +305,7 @@ const translations = {
       save: 'Save',
       reload: 'Reload',
       portabilityDescription: 'Move settings between machines, keep a backup, or prepare a test profile before saving.',
-      importHint: 'JSON import updates the form locally first. Save when you're happy with the result.',
+      importHint: "JSON import updates the form locally first. Save when you're happy with the result.",
       export: 'Export',
       import: 'Import',
       exported: 'Settings exported.',

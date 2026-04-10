@@ -199,42 +199,39 @@ export function SettingsPage() {
       {error ? <div className="ui-status-error">{error}</div> : null}
       {saved ? <div className="ui-status-success" style={{ marginTop: error ? 12 : 0 }}>{saved}</div> : null}
 
-      <section className="ui-card" style={{ marginTop: 18, marginBottom: 18 }}>
-        <div className="ui-card-body">
-          <div className="ui-toolbar" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-            <div>
-              <h3 className="ui-card-title">{t('settings.overviewTitle2')}</h3>
-              <p className="ui-card-description">
-                {t('settings.overviewDesc2')}
-              </p>
-            </div>
-            <div className="ui-toolbar">
-              <span className="ui-pill">{t(`settings.languagePill|${language}`)}</span>
-              <span className="ui-pill">{t(`settings.fieldCount|${fieldCount}`)}</span>
-              <span className="ui-pill">Providers: {config.visualClient.providers.filter((provider) => provider.enabled).length}</span>
-            </div>
-          </div>
-
-          <div className="settings-tab-list">
+      <div className="settings-sidebar-layout">
+        {/* Left Sidebar Navigation */}
+        <nav className="settings-sidebar">
+          <div className="settings-sidebar-section">
+            <div className="settings-sidebar-heading">{language === 'zh' ? '配置' : 'Config'}</div>
             {SETTINGS_TABS.map((tab) => (
               <button
                 key={tab.id}
                 type="button"
-                className={`settings-tab-button ${activeTab === tab.id ? 'is-active' : ''}`}
+                className={`settings-nav-item ${activeTab === tab.id ? 'is-active' : ''}`}
                 onClick={() => setActiveTab(tab.id)}
               >
                 {t(tab.labelKey)}
               </button>
             ))}
           </div>
-        </div>
-      </section>
+          <div className="settings-sidebar-footer">
+            <div className="settings-sidebar-meta">
+              <span className="ui-pill-xs">{t(`settings.languagePill|${language}`)}</span>
+              <span className="ui-pill-xs">{t(`settings.fieldCount|${fieldCount}`)}</span>
+            </div>
+            <div className="ui-toolbar" style={{ gap: 6 }}>
+              <button onClick={save} disabled={loading || hasValidationErrors} className="btn-sm">{t('settings.save')}</button>
+              <button onClick={load} disabled={loading} className="btn-sm">{t('settings.reload')}</button>
+            </div>
+          </div>
+        </nav>
 
-      <div className="settings-layout">
-        <section className="ui-card">
-          <div className="ui-card-body">
-            {activeTab === 'general' ? (
-              <div className="settings-stack">
+        {/* Right Content Area */}
+        <div className="settings-main">
+          {activeTab === 'general' ? (
+            <section className="ui-card">
+              <div className="ui-card-body">
                 <h3 className="ui-card-title">{t('settings.tabGeneralDefaults')}</h3>
                 <label className="ui-label">
                   <div className="ui-label-text">{t('settings.languageTitle')}</div>
@@ -281,10 +278,12 @@ export function SettingsPage() {
                   <span>{t('settings.tabGeneralSubagents')}</span>
                 </label>
               </div>
-            ) : null}
+            </section>
+          ) : null}
 
-            {activeTab === 'connection' ? (
-              <div className="settings-stack">
+          {activeTab === 'connection' ? (
+            <section className="ui-card">
+              <div className="ui-card-body">
                 <h3 className="ui-card-title">{t('settings.tabConnectionTitle')}</h3>
                 <label className="ui-label">
                   <div className="ui-label-text">{t('settings.tabConnectionBaseUrl')}</div>
@@ -338,6 +337,7 @@ export function SettingsPage() {
                 <label className="ui-label">
                   <div className="ui-label-text">{t('settings.tabConnectionHealthPath')}</div>
                   <input
+                    aria-label={t('settings.tabConnectionHealthPath')}
                     value={config.visualClient.connection.healthPath}
                     onChange={(event) =>
                       updateConfig((current) => ({
@@ -351,16 +351,17 @@ export function SettingsPage() {
                   />
                 </label>
               </div>
-            ) : null}
+            </section>
+          ) : null}
 
-            {activeTab === 'providers' ? (
-              <div className="settings-stack">
+          {activeTab === 'providers' ? (
+            <section className="ui-card">
+              <div className="ui-card-body">
                 <h3 className="ui-card-title">{t('settings.tabProvidersTitle')}</h3>
                 <div className="settings-provider-grid">
                   {providerCatalog.map((provider) => {
                     const savedProvider = config.visualClient.providers.find((item) => item.id === provider.id)
                     if (!savedProvider) return null
-
                     return (
                       <section key={provider.id} className="ui-card-soft settings-provider-card">
                         <label className="chat-checkbox">
@@ -391,17 +392,18 @@ export function SettingsPage() {
                   })}
                 </div>
               </div>
-            ) : null}
+            </section>
+          ) : null}
 
-            {activeTab === 'tools' ? (
-              <div className="settings-stack">
+          {activeTab === 'tools' ? (
+            <section className="ui-card">
+              <div className="ui-card-body">
                 <h3 className="ui-card-title">{t('settings.tabToolsTitle')}</h3>
                 <p className="ui-card-description">{t('settings.tabToolsDescription')}</p>
                 <div className="settings-provider-grid">
                   {toolPresets.map((preset) => {
                     const savedPreset = config.visualClient.toolsets.find((item) => item.id === preset.id)
                     if (!savedPreset) return null
-
                     return (
                       <section key={preset.id} className="ui-card-soft settings-provider-card">
                         <label className="chat-checkbox">
@@ -417,22 +419,16 @@ export function SettingsPage() {
                     )
                   })}
                 </div>
-                <div className="settings-tool-grid">
-                  {toolCatalog.map((tool) => (
-                    <div key={tool.id} className="settings-tool-chip">
-                      <div>{tool.label}</div>
-                      <div className="ui-meta">{tool.category} · {tool.endpoint}</div>
-                    </div>
-                  ))}
-                </div>
               </div>
-            ) : null}
+            </section>
+          ) : null}
 
-            {activeTab === 'mcp' ? (
-              <div className="settings-stack">
+          {activeTab === 'mcp' ? (
+            <section className="ui-card">
+              <div className="ui-card-body">
                 <h3 className="ui-card-title">{t('settings.tabMcpTitle')}</h3>
                 {config.visualClient.mcpServers.map((server, index) => (
-                  <section key={`${server.id}-${index}`} className="ui-card-soft settings-provider-card">
+                  <section key={`${server.id}-${index}`} className="ui-card-soft settings-provider-card" style={{ marginBottom: 12 }}>
                     <label className="chat-checkbox">
                       <input
                         type="checkbox"
@@ -459,10 +455,12 @@ export function SettingsPage() {
                   </section>
                 ))}
               </div>
-            ) : null}
+            </section>
+          ) : null}
 
-            {activeTab === 'terminal' ? (
-              <div className="settings-stack">
+          {activeTab === 'terminal' ? (
+            <section className="ui-card">
+              <div className="ui-card-body">
                 <h3 className="ui-card-title">{t('settings.tabTerminalTitle')}</h3>
                 <label className="ui-label">
                   <div className="ui-label-text">{t('settings.tabTerminalBackend')}</div>
@@ -519,20 +517,13 @@ export function SettingsPage() {
                     }
                   />
                 </label>
-                <div className="settings-provider-grid">
-                  {terminalBackendCatalog.map((backend) => (
-                    <section key={backend.id} className="ui-card-soft settings-provider-card">
-                      <div className="ui-card-title">{backend.label}</div>
-                      <div className="ui-meta">{backend.runtime}</div>
-                      <div className="ui-meta">{backend.description}</div>
-                    </section>
-                  ))}
-                </div>
               </div>
-            ) : null}
+            </section>
+          ) : null}
 
-            {activeTab === 'automation' ? (
-              <div className="settings-stack">
+          {activeTab === 'automation' ? (
+            <section className="ui-card">
+              <div className="ui-card-body">
                 <h3 className="ui-card-title">{t('settings.tabAutomationTitle')}</h3>
                 <label className="ui-label">
                   <div className="ui-label-text">{t('settings.tabAutomationMaxTurns')}</div>
@@ -694,10 +685,12 @@ export function SettingsPage() {
                   />
                 </label>
               </div>
-            ) : null}
+            </section>
+          ) : null}
 
-            {activeTab === 'packaging' ? (
-              <div className="settings-stack">
+          {activeTab === 'packaging' ? (
+            <section className="ui-card">
+              <div className="ui-card-body">
                 <h3 className="ui-card-title">{t('settings.tabPackagingTitle')}</h3>
                 <label className="ui-label">
                   <div className="ui-label-text">{t('settings.tabPackagingInstallProfile')}</div>
@@ -753,71 +746,10 @@ export function SettingsPage() {
                   />
                   <span>{t('settings.tabPackagingIncludeEnvDoctor')}</span>
                 </label>
-
-                <div className="settings-provider-grid">
-                  {envProbeCatalog.map((probe) => (
-                    <section key={probe.id} className="ui-card-soft settings-provider-card">
-                      <div className="ui-card-title">{probe.label}</div>
-                      <div className="ui-code">{probe.command}</div>
-                    </section>
-                  ))}
-                </div>
-                <div className="settings-endpoint-list">
-                  {apiEndpointCatalog.map((endpoint) => (
-                    <div key={`${endpoint.method}-${endpoint.path}`} className="chat-endpoint-item">
-                      <div className="ui-code">{endpoint.path}</div>
-                      <div className="ui-meta">{endpoint.method} · {endpoint.summary}</div>
-                    </div>
-                  ))}
-                </div>
               </div>
-            ) : null}
-          </div>
-        </section>
-
-        <aside className="ui-card">
-          <div className="ui-card-body">
-            <h3 className="ui-card-title">{t('settings.sidebarPortableProfile')}</h3>
-            <p className="ui-card-description">{t('settings.portabilityDescription')}</p>
-            <div className="ui-toolbar" style={{ marginTop: 18 }}>
-              <button onClick={save} disabled={loading || hasValidationErrors}>{t('settings.save')}</button>
-              <button onClick={load} disabled={loading}>{t('settings.reload')}</button>
-              <button onClick={exportConfig} disabled={loading}>{t('settings.export')}</button>
-              <button onClick={() => importInputRef.current?.click()} disabled={loading}>{t('settings.import')}</button>
-            </div>
-            <div className="ui-meta" style={{ marginTop: 14 }}>
-              {t('settings.importHint')}
-            </div>
-            {hasValidationErrors ? (
-              <div className="ui-status-error" style={{ marginTop: 14 }}>
-                {validationErrors.join('\n')}
-              </div>
-            ) : null}
-
-            <div className="settings-summary-grid">
-              <div className="settings-summary-card">
-                <div className="ui-meta">{t('settings.sidebarEnabledProviders')}</div>
-                <div className="settings-summary-value">{config.visualClient.providers.filter((provider) => provider.enabled).length}</div>
-              </div>
-              <div className="settings-summary-card">
-                <div className="ui-meta">{t('settings.sidebarEnabledToolsets')}</div>
-                <div className="settings-summary-value">{config.visualClient.toolsets.filter((toolset) => toolset.enabled).length}</div>
-              </div>
-              <div className="settings-summary-card">
-                <div className="ui-meta">{t('settings.sidebarConfiguredMcp')}</div>
-                <div className="settings-summary-value">{config.visualClient.mcpServers.filter((server) => server.enabled).length}</div>
-              </div>
-            </div>
-
-            <input
-              ref={importInputRef}
-              type="file"
-              accept="application/json,.json"
-              onChange={importConfig}
-              style={{ display: 'none' }}
-            />
-          </div>
-        </aside>
+            </section>
+          ) : null}
+        </div>
       </div>
     </div>
   )

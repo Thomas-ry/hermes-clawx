@@ -34,6 +34,8 @@ let win: BrowserWindow | null
 
 function createWindow() {
   win = new BrowserWindow({
+    width: 1280,
+    height: 800,
     icon: VITE_DEV_SERVER_URL
       ? path.join(process.env.VITE_PUBLIC, 'clawt-icon.png')
       : path.join(process.env.APP_ROOT, 'build', 'icon.png'),

@@ -1,11 +1,12 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { useI18n } from '../i18n'
-import { ArrowCircleIcon, ChatIcon, ClockIcon, DashboardIcon, LinkIcon, SettingsIcon, SparklesIcon, TerminalIcon } from './icons'
+import { ArrowCircleIcon, BrainIcon, ChatIcon, ClockIcon, DashboardIcon, LinkIcon, SettingsIcon, SparklesIcon, TerminalIcon } from './icons'
 import './appLayout.css'
 
 const NAV_ITEMS: Array<{ to: string; labelKey: string; icon: React.ReactNode }> = [
   { to: '/dashboard', labelKey: 'nav.dashboard', icon: <DashboardIcon width={18} height={18} /> },
   { to: '/chat', labelKey: 'nav.chat', icon: <ChatIcon width={18} height={18} /> },
+  { to: '/memory', labelKey: 'nav.memory', icon: <BrainIcon width={18} height={18} /> },
   { to: '/cron', labelKey: 'nav.cron', icon: <ClockIcon width={18} height={18} /> },
   { to: '/skills', labelKey: 'nav.skills', icon: <SparklesIcon width={18} height={18} /> },
   { to: '/channels', labelKey: 'nav.channels', icon: <LinkIcon width={18} height={18} /> },

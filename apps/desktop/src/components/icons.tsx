@@ -81,6 +81,16 @@ export function TerminalIcon(props: IconProps) {
   )
 }
 
+export function BrainIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M9 5.5a3 3 0 0 1 5.7-1.3A3.2 3.2 0 0 1 18.5 7 3.2 3.2 0 0 1 17 12.8V14a3 3 0 0 1-3 3h-4a3 3 0 0 1-3-3v-1.2A3.2 3.2 0 0 1 5.5 7a3.2 3.2 0 0 1 3.8-2.8" />
+      <path d="M9.5 9.5c.7.5 1.6.7 2.5.7s1.8-.2 2.5-.7" />
+      <path d="M12 10.2V17" />
+    </BaseIcon>
+  )
+}
+
 export function ArrowCircleIcon(props: IconProps) {
   return (
     <BaseIcon {...props}>

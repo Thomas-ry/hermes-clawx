@@ -28,6 +28,7 @@ export function SkillsPage() {
   const [selectedSkill, setSelectedSkill] = useState<SkillViewResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [category, setCategory] = useState<string>('')
+  const [query, setQuery] = useState<string>('')
   const [platform, setPlatform] = useState<string>('global')
   const [busySkillName, setBusySkillName] = useState<string | null>(null)
 
@@ -66,9 +67,22 @@ export function SkillsPage() {
       )
       setDisabledSkills(nextDisabledSkills)
 
-      const nextSkills = ((allSkills as SkillRow[]) ?? []).filter((skill) =>
-        category ? (skill.category ?? '').toLowerCase().includes(category.toLowerCase()) : true,
-      )
+      const normalizedQuery = query.trim().toLowerCase()
+      const nextSkills = ((allSkills as SkillRow[]) ?? []).filter((skill) => {
+        if (category && !(skill.category ?? '').toLowerCase().includes(category.toLowerCase())) {
+          return false
+        }
+
+        if (!normalizedQuery) {
+          return true
+        }
+
+        return [skill.name, skill.description, skill.category]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+          .includes(normalizedQuery)
+      })
       setSkills(nextSkills)
 
       const nextSelectedName =
@@ -85,7 +99,7 @@ export function SkillsPage() {
     } catch (e) {
       setError(String(e))
     }
-  }, [category, platform])
+  }, [category, platform, query])
 
   useEffect(() => {
     refresh(selectedSkillName)
@@ -139,6 +153,15 @@ export function SkillsPage() {
               <div className="ui-label-text">{t('skills.category')}</div>
               <input value={category} onChange={(e) => setCategory(e.target.value)} placeholder={t('skills.optional')} />
             </label>
+            <label className="ui-label" style={{ minWidth: 240, marginBottom: 0 }}>
+              <div className="ui-label-text">{t('skills.search')}</div>
+              <input
+                aria-label={t('skills.search')}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={t('skills.searchPlaceholder')}
+              />
+            </label>
             <button onClick={() => refresh(selectedSkillName)}>{t('skills.refresh')}</button>
           </div>
 
@@ -157,6 +180,9 @@ export function SkillsPage() {
               </div>
               <div className="ui-meta" style={{ marginTop: 14 }}>
                 {t('skills.disabledInScope')}: {disabledSkills.length}
+              </div>
+              <div className="ui-meta" style={{ marginTop: 8 }}>
+                {t(`skills.visibleCount|${skills.length}`)}
               </div>
             </section>
 
@@ -190,7 +216,11 @@ export function SkillsPage() {
                   </div>
                 ))}
                 {skills.length === 0 ? (
-                  <EmptyState icon={<SparklesIcon width={20} height={20} />} title={t('skills.skillsCount')} description={t('skills.noSkills')} />
+                  <EmptyState
+                    icon={<SparklesIcon width={20} height={20} />}
+                    title={t('skills.skillsCount')}
+                    description={category || query ? t('skills.noSkillsMatch') : t('skills.noSkills')}
+                  />
                 ) : null}
               </div>
             </section>

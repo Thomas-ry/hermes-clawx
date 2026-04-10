@@ -1,4 +1,4 @@
-export const PUBLIC_UPDATE_FEED_URL = 'https://thomas-ry.github.io/hermes-clawT/updates'
+export const PUBLIC_UPDATE_FEED_URL = 'https://thomas-ry.github.io/hermes-clawx/updates'
 
 export type ReleaseFeedSection = {
   category: string

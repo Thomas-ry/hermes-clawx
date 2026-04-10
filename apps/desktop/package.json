@@ -1,5 +1,5 @@
 {
-  "name": "clawt-desktop",
+  "name": "hermes-clawx-desktop",
   "private": true,
   "version": "0.1.0",
   "description": "Desktop visual client for Hermes Agent with a bundled runtime",
@@ -7,7 +7,7 @@
     "name": "Thomas",
     "email": "thomas@users.noreply.github.com"
   },
-  "homepage": "https://github.com/Thomas-ry/hermes-clawT",
+  "homepage": "https://github.com/Thomas-ry/hermes-clawx",
   "type": "module",
   "scripts": {
     "dev": "vite",

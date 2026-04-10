@@ -1,15 +1,15 @@
 {
-  "name": "hermes-clawt",
+  "name": "hermes-clawx",
   "version": "0.1.0",
   "description": "Desktop visual client for Hermes Agent, inspired by the ClawX experience",
   "author": {
     "name": "Thomas",
     "email": "thomas@users.noreply.github.com"
   },
-  "homepage": "https://github.com/Thomas-ry/hermes-clawT",
+  "homepage": "https://github.com/Thomas-ry/hermes-clawx",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Thomas-ry/hermes-clawT.git"
+    "url": "https://github.com/Thomas-ry/hermes-clawx.git"
   },
   "private": true,
   "packageManager": "pnpm@10.32.1",
@@ -17,6 +17,8 @@
   "scripts": {
     "icons:build": "python3 ./scripts/generate-icons.py",
     "runtime:build": "node ./scripts/build-hermes-runtime.mjs",
+    "setup": "node ./scripts/bootstrap.mjs",
+    "doctor": "node ./scripts/env-doctor.mjs",
     "dev": "pnpm -C apps/desktop dev",
     "build": "pnpm -C apps/desktop build",
     "lint": "pnpm -C apps/desktop lint",

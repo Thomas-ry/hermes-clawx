@@ -1,14 +1,14 @@
 // @see - https://www.electron.build/configuration/configuration
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  "appId": "com.thomas.clawt",
+  "appId": "com.thomas.hermesclawx",
   "asar": true,
-  "productName": "clawT",
+  "productName": "Hermes ClawX",
   "electronUpdaterCompatibility": ">=2.16",
   "publish": [
     {
       "provider": "generic",
-      "url": "https://thomas-ry.github.io/hermes-clawT/updates"
+      "url": "https://thomas-ry.github.io/hermes-clawx/updates"
     }
   ],
   "directories": {
@@ -51,9 +51,9 @@
     "artifactName": "${productName}-Windows-${version}-Setup.${ext}"
   },
   "nsis": {
-    "oneClick": false,
+    "oneClick": true,
     "perMachine": false,
-    "allowToChangeInstallationDirectory": true,
+    "allowToChangeInstallationDirectory": false,
     "deleteAppDataOnUninstall": false
   },
   "linux": {

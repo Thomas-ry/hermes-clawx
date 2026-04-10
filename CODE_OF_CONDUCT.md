@@ -2,7 +2,7 @@
 
 ## Our Pledge
 
-We want `clawT` to be an open, welcoming, and constructive project.
+We want `Hermes ClawX` to be an open, welcoming, and constructive project.
 Contributors, maintainers, and community members are expected to participate in ways that make collaboration safe and respectful for everyone.
 
 ## Expected Behavior

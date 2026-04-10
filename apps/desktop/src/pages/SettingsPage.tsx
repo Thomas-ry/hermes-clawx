@@ -1,17 +1,37 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useI18n } from '../i18n'
+import {
+  apiEndpointCatalog,
+  countConfiguredFields,
+  envProbeCatalog,
+  normalizeVisualClientConfig,
+  providerCatalog,
+  terminalBackendCatalog,
+  toolCatalog,
+  toolPresets,
+  type VisualClientConfig,
+} from '../lib/hermesWorkbench'
 
-type ConfigShape = {
-  model?: string
-  agent?: {
-    max_turns?: number
-  }
-  terminal?: {
-    backend?: string
-    timeout?: number
-    cwd?: string
-  }
-}
+type SettingsTabId =
+  | 'general'
+  | 'connection'
+  | 'providers'
+  | 'tools'
+  | 'mcp'
+  | 'terminal'
+  | 'automation'
+  | 'packaging'
+
+const SETTINGS_TABS: Array<{ id: SettingsTabId; label: string }> = [
+  { id: 'general', label: 'General' },
+  { id: 'connection', label: 'Connection' },
+  { id: 'providers', label: 'Providers' },
+  { id: 'tools', label: 'Tools' },
+  { id: 'mcp', label: 'MCP' },
+  { id: 'terminal', label: 'Terminal' },
+  { id: 'automation', label: 'Automation' },
+  { id: 'packaging', label: 'Packaging' },
+]
 
 export function SettingsPage() {
   const { language, setLanguage, t } = useI18n()
@@ -19,70 +39,70 @@ export function SettingsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState<string | null>(null)
-  const [config, setConfig] = useState<ConfigShape>({})
+  const [config, setConfig] = useState<VisualClientConfig>(normalizeVisualClientConfig({}))
+  const [activeTab, setActiveTab] = useState<SettingsTabId>('connection')
 
-  const [model, setModel] = useState('')
-  const [maxTurns, setMaxTurns] = useState('90')
-  const [terminalBackend, setTerminalBackend] = useState('local')
-  const [terminalTimeout, setTerminalTimeout] = useState('180')
-  const [terminalCwd, setTerminalCwd] = useState('.')
-  const configFieldCount = [
-    model.trim() ? 1 : 0,
-    maxTurns.trim() ? 1 : 0,
-    terminalBackend.trim() ? 1 : 0,
-    terminalTimeout.trim() ? 1 : 0,
-    terminalCwd.trim() ? 1 : 0,
-  ].reduce((sum, value) => sum + value, 0)
+  const fieldCount = countConfiguredFields(config)
+  const maxTurnsValue = Number(config.agent.max_turns)
+  const timeoutValue = Number(config.terminal.timeout)
+  const gatewayPortValue = Number(config.visualClient.connection.gatewayPort)
+  const concurrencyValue = Number(config.visualClient.cron.concurrency)
 
-  function applyConfig(next: ConfigShape) {
-    setConfig(next)
-    setModel(String(next.model ?? ''))
-    setMaxTurns(String(next.agent?.max_turns ?? 90))
-    setTerminalBackend(String(next.terminal?.backend ?? 'local'))
-    setTerminalTimeout(String(next.terminal?.timeout ?? 180))
-    setTerminalCwd(String(next.terminal?.cwd ?? '.'))
-  }
+  const validationErrors = useMemo(() => [
+    !Number.isFinite(maxTurnsValue) || !Number.isInteger(maxTurnsValue)
+      ? t('settings.validationMaxTurnsInteger')
+      : maxTurnsValue < 1
+        ? t('settings.validationMaxTurnsMin')
+        : null,
+    !Number.isFinite(timeoutValue) || !Number.isInteger(timeoutValue)
+      ? t('settings.validationTimeoutInteger')
+      : timeoutValue < 1
+        ? t('settings.validationTimeoutMin')
+        : null,
+    !Number.isFinite(gatewayPortValue) || !Number.isInteger(gatewayPortValue) || gatewayPortValue < 1
+      ? 'Gateway port must be a positive integer.'
+      : null,
+    !Number.isFinite(concurrencyValue) || !Number.isInteger(concurrencyValue) || concurrencyValue < 1
+      ? 'Cron concurrency must be at least 1.'
+      : null,
+  ].filter((value): value is string => Boolean(value)), [concurrencyValue, gatewayPortValue, maxTurnsValue, t, timeoutValue])
+  const hasValidationErrors = validationErrors.length > 0
 
-  function buildConfigDraft(): ConfigShape {
-    return {
-      ...config,
-      model,
-      agent: {
-        ...(config.agent ?? {}),
-        max_turns: Number(maxTurns || 90),
-      },
-      terminal: {
-        ...(config.terminal ?? {}),
-        backend: terminalBackend,
-        timeout: Number(terminalTimeout || 180),
-        cwd: terminalCwd,
-      },
-    }
-  }
+  const updateConfig = useCallback((updater: (current: VisualClientConfig) => VisualClientConfig) => {
+    setConfig((current) => updater(current))
+  }, [])
 
   const load = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
-      const next = (await window.hermes.config.get()) as ConfigShape
-      applyConfig(next)
-    } catch (e) {
-      setError(String(e))
+      const next = await window.hermes.config.get()
+      setConfig(normalizeVisualClientConfig(next))
+    } catch (loadError) {
+      setError(String(loadError))
     } finally {
       setLoading(false)
     }
   }, [])
 
+  useEffect(() => {
+    load()
+  }, [load])
+
   async function save() {
+    if (hasValidationErrors) {
+      setSaved(null)
+      setError(validationErrors.join('\n'))
+      return
+    }
+
     try {
       setError(null)
       setSaved(null)
-      const next = buildConfigDraft()
-      await window.hermes.config.save(next as Record<string, unknown>)
-      applyConfig(next)
+      await window.hermes.config.save(config as unknown as Record<string, unknown>)
       setSaved(t('settings.saved'))
-    } catch (e) {
-      setError(String(e))
+    } catch (saveError) {
+      setError(String(saveError))
     }
   }
 
@@ -90,43 +110,84 @@ export function SettingsPage() {
     try {
       setError(null)
       setSaved(null)
-      const next = buildConfigDraft()
-      const blob = new Blob([`${JSON.stringify(next, null, 2)}\n`], { type: 'application/json' })
+      const blob = new Blob([`${JSON.stringify(config, null, 2)}\n`], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const anchor = document.createElement('a')
       anchor.href = url
-      anchor.download = 'clawT-config.json'
+      anchor.download = 'hermes-clawx-config.json'
       anchor.click()
       URL.revokeObjectURL(url)
       setSaved(t('settings.exported'))
-    } catch (e) {
-      setError(String(e))
+    } catch (exportError) {
+      setError(String(exportError))
     }
   }
 
   async function importConfig(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
-    if (!file) {
-      return
-    }
+    if (!file) return
 
     try {
       setError(null)
       setSaved(null)
       const raw = await file.text()
-      const parsed = JSON.parse(raw) as ConfigShape
-      applyConfig(parsed)
+      const parsed = JSON.parse(raw) as Record<string, unknown>
+      setConfig(normalizeVisualClientConfig(parsed))
       setSaved(t('settings.importLoaded'))
-    } catch (e) {
-      setError(`${t('settings.importFailed')}: ${String(e)}`)
+    } catch (importError) {
+      setError(`${t('settings.importFailed')}: ${String(importError)}`)
     } finally {
       event.target.value = ''
     }
   }
 
-  useEffect(() => {
-    load()
-  }, [load])
+  function toggleProvider(providerId: string, checked: boolean) {
+    updateConfig((current) => ({
+      ...current,
+      visualClient: {
+        ...current.visualClient,
+        providers: current.visualClient.providers.map((provider) =>
+          provider.id === providerId ? { ...provider, enabled: checked } : provider,
+        ),
+      },
+    }))
+  }
+
+  function updateProviderField(providerId: string, field: 'baseUrl' | 'apiKeyEnv' | 'defaultModel', value: string) {
+    updateConfig((current) => ({
+      ...current,
+      visualClient: {
+        ...current.visualClient,
+        providers: current.visualClient.providers.map((provider) =>
+          provider.id === providerId ? { ...provider, [field]: value } : provider,
+        ),
+      },
+    }))
+  }
+
+  function toggleToolPreset(presetId: string, checked: boolean) {
+    updateConfig((current) => ({
+      ...current,
+      visualClient: {
+        ...current.visualClient,
+        toolsets: current.visualClient.toolsets.map((preset) =>
+          preset.id === presetId ? { ...preset, enabled: checked } : preset,
+        ),
+      },
+    }))
+  }
+
+  function updateMcpServer(index: number, field: 'enabled' | 'transport' | 'command' | 'url', value: boolean | string) {
+    updateConfig((current) => ({
+      ...current,
+      visualClient: {
+        ...current.visualClient,
+        mcpServers: current.visualClient.mcpServers.map((server, serverIndex) =>
+          serverIndex === index ? { ...server, [field]: value } : server,
+        ),
+      },
+    }))
+  }
 
   return (
     <div className="page-shell">
@@ -142,79 +203,584 @@ export function SettingsPage() {
         <div className="ui-card-body">
           <div className="ui-toolbar" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
             <div>
-              <h3 className="ui-card-title">{t('settings.overviewTitle')}</h3>
-              <p className="ui-card-description">{t('settings.overviewDescription')}</p>
+              <h3 className="ui-card-title">Hermes Visual Client Control Center</h3>
+              <p className="ui-card-description">
+                Mirror the `localhost:3000/chat/new` workflow while reserving every provider, tool, MCP, runtime, and packaging knob we need for a shippable visual client.
+              </p>
             </div>
             <div className="ui-toolbar">
               <span className="ui-pill">{t(`settings.languagePill|${language}`)}</span>
-              <span className="ui-pill">{t(`settings.fieldCount|${configFieldCount}`)}</span>
+              <span className="ui-pill">{t(`settings.fieldCount|${fieldCount}`)}</span>
+              <span className="ui-pill">Providers: {config.visualClient.providers.filter((provider) => provider.enabled).length}</span>
             </div>
+          </div>
+
+          <div className="settings-tab-list">
+            {SETTINGS_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                className={`settings-tab-button ${activeTab === tab.id ? 'is-active' : ''}`}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
       </section>
 
-      <div className="ui-grid ui-grid-two">
+      <div className="settings-layout">
         <section className="ui-card">
           <div className="ui-card-body">
-            <h3 className="ui-card-title">{t('settings.languageTitle')}</h3>
-            <p className="ui-card-description">{t('settings.languageDescription')}</p>
-            <label className="ui-label" style={{ marginTop: 18 }}>
-              <div className="ui-label-text">{t('app.language')}</div>
-              <select value={language} onChange={(e) => setLanguage(e.target.value as 'en' | 'zh')}>
-                <option value="en">{t('app.english')}</option>
-                <option value="zh">{t('app.chinese')}</option>
-              </select>
-            </label>
+            {activeTab === 'general' ? (
+              <div className="settings-stack">
+                <h3 className="ui-card-title">General defaults</h3>
+                <label className="ui-label">
+                  <div className="ui-label-text">Language</div>
+                  <select value={language} onChange={(event) => setLanguage(event.target.value as 'en' | 'zh')}>
+                    <option value="en">{t('app.english')}</option>
+                    <option value="zh">{t('app.chinese')}</option>
+                  </select>
+                </label>
+                <label className="ui-label">
+                  <div className="ui-label-text">Default model</div>
+                  <input
+                    aria-label="Default model"
+                    value={config.model}
+                    onChange={(event) => updateConfig((current) => ({ ...current, model: event.target.value }))}
+                  />
+                </label>
+                <label className="ui-label">
+                  <div className="ui-label-text">Planning mode</div>
+                  <select
+                    value={config.agent.planning_mode}
+                    onChange={(event) =>
+                      updateConfig((current) => ({
+                        ...current,
+                        agent: { ...current.agent, planning_mode: event.target.value as VisualClientConfig['agent']['planning_mode'] },
+                      }))
+                    }
+                  >
+                    <option value="fast">Fast</option>
+                    <option value="balanced">Balanced</option>
+                    <option value="deep">Deep</option>
+                  </select>
+                </label>
+                <label className="chat-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={config.agent.subagents_enabled}
+                    onChange={(event) =>
+                      updateConfig((current) => ({
+                        ...current,
+                        agent: { ...current.agent, subagents_enabled: event.target.checked },
+                      }))
+                    }
+                  />
+                  <span>Enable sub-agent orchestration</span>
+                </label>
+              </div>
+            ) : null}
+
+            {activeTab === 'connection' ? (
+              <div className="settings-stack">
+                <h3 className="ui-card-title">Connection & health</h3>
+                <label className="ui-label">
+                  <div className="ui-label-text">Base URL</div>
+                  <input
+                    aria-label="Base URL"
+                    value={config.visualClient.connection.baseUrl}
+                    onChange={(event) =>
+                      updateConfig((current) => ({
+                        ...current,
+                        visualClient: {
+                          ...current.visualClient,
+                          connection: { ...current.visualClient.connection, baseUrl: event.target.value },
+                        },
+                      }))
+                    }
+                  />
+                </label>
+                <label className="ui-label">
+                  <div className="ui-label-text">API Key</div>
+                  <input
+                    aria-label="API Key"
+                    type="password"
+                    value={config.visualClient.connection.apiKey}
+                    onChange={(event) =>
+                      updateConfig((current) => ({
+                        ...current,
+                        visualClient: {
+                          ...current.visualClient,
+                          connection: { ...current.visualClient.connection, apiKey: event.target.value },
+                        },
+                      }))
+                    }
+                  />
+                </label>
+                <label className="ui-label">
+                  <div className="ui-label-text">Gateway port</div>
+                  <input
+                    aria-label="Gateway port"
+                    value={String(config.visualClient.connection.gatewayPort)}
+                    onChange={(event) =>
+                      updateConfig((current) => ({
+                        ...current,
+                        visualClient: {
+                          ...current.visualClient,
+                          connection: { ...current.visualClient.connection, gatewayPort: Number(event.target.value || 0) },
+                        },
+                      }))
+                    }
+                  />
+                </label>
+                <label className="ui-label">
+                  <div className="ui-label-text">Health path</div>
+                  <input
+                    value={config.visualClient.connection.healthPath}
+                    onChange={(event) =>
+                      updateConfig((current) => ({
+                        ...current,
+                        visualClient: {
+                          ...current.visualClient,
+                          connection: { ...current.visualClient.connection, healthPath: event.target.value },
+                        },
+                      }))
+                    }
+                  />
+                </label>
+              </div>
+            ) : null}
+
+            {activeTab === 'providers' ? (
+              <div className="settings-stack">
+                <h3 className="ui-card-title">Provider matrix</h3>
+                <div className="settings-provider-grid">
+                  {providerCatalog.map((provider) => {
+                    const savedProvider = config.visualClient.providers.find((item) => item.id === provider.id)
+                    if (!savedProvider) return null
+
+                    return (
+                      <section key={provider.id} className="ui-card-soft settings-provider-card">
+                        <label className="chat-checkbox">
+                          <input
+                            type="checkbox"
+                            checked={savedProvider.enabled}
+                            onChange={(event) => toggleProvider(provider.id, event.target.checked)}
+                          />
+                          <span>{provider.label}</span>
+                        </label>
+                        <div className="ui-meta">
+                          Streaming: {provider.supportsStreaming ? 'yes' : 'no'} · Vision: {provider.supportsVision ? 'yes' : 'no'}
+                        </div>
+                        <label className="ui-label">
+                          <div className="ui-label-text">Base URL</div>
+                          <input value={savedProvider.baseUrl} onChange={(event) => updateProviderField(provider.id, 'baseUrl', event.target.value)} />
+                        </label>
+                        <label className="ui-label">
+                          <div className="ui-label-text">API key env</div>
+                          <input value={savedProvider.apiKeyEnv} onChange={(event) => updateProviderField(provider.id, 'apiKeyEnv', event.target.value)} />
+                        </label>
+                        <label className="ui-label">
+                          <div className="ui-label-text">Default model</div>
+                          <input value={savedProvider.defaultModel} onChange={(event) => updateProviderField(provider.id, 'defaultModel', event.target.value)} />
+                        </label>
+                      </section>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : null}
+
+            {activeTab === 'tools' ? (
+              <div className="settings-stack">
+                <h3 className="ui-card-title">Toolsets & reserved capabilities</h3>
+                <p className="ui-card-description">Ship the important Hermes surfaces out of the box, but keep all tool wires reserved.</p>
+                <div className="settings-provider-grid">
+                  {toolPresets.map((preset) => {
+                    const savedPreset = config.visualClient.toolsets.find((item) => item.id === preset.id)
+                    if (!savedPreset) return null
+
+                    return (
+                      <section key={preset.id} className="ui-card-soft settings-provider-card">
+                        <label className="chat-checkbox">
+                          <input
+                            type="checkbox"
+                            checked={savedPreset.enabled}
+                            onChange={(event) => toggleToolPreset(preset.id, event.target.checked)}
+                          />
+                          <span>{preset.label}</span>
+                        </label>
+                        <div className="ui-meta">{savedPreset.selectedTools.join(', ')}</div>
+                      </section>
+                    )
+                  })}
+                </div>
+                <div className="settings-tool-grid">
+                  {toolCatalog.map((tool) => (
+                    <div key={tool.id} className="settings-tool-chip">
+                      <div>{tool.label}</div>
+                      <div className="ui-meta">{tool.category} · {tool.endpoint}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {activeTab === 'mcp' ? (
+              <div className="settings-stack">
+                <h3 className="ui-card-title">MCP servers</h3>
+                {config.visualClient.mcpServers.map((server, index) => (
+                  <section key={`${server.id}-${index}`} className="ui-card-soft settings-provider-card">
+                    <label className="chat-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={server.enabled}
+                        onChange={(event) => updateMcpServer(index, 'enabled', event.target.checked)}
+                      />
+                      <span>{server.id}</span>
+                    </label>
+                    <label className="ui-label">
+                      <div className="ui-label-text">Transport</div>
+                      <select value={server.transport} onChange={(event) => updateMcpServer(index, 'transport', event.target.value)}>
+                        <option value="stdio">stdio</option>
+                        <option value="http">http</option>
+                      </select>
+                    </label>
+                    <label className="ui-label">
+                      <div className="ui-label-text">Command</div>
+                      <input value={server.command} onChange={(event) => updateMcpServer(index, 'command', event.target.value)} />
+                    </label>
+                    <label className="ui-label">
+                      <div className="ui-label-text">URL</div>
+                      <input value={server.url} onChange={(event) => updateMcpServer(index, 'url', event.target.value)} />
+                    </label>
+                  </section>
+                ))}
+              </div>
+            ) : null}
+
+            {activeTab === 'terminal' ? (
+              <div className="settings-stack">
+                <h3 className="ui-card-title">Terminal backends</h3>
+                <label className="ui-label">
+                  <div className="ui-label-text">Backend</div>
+                  <select
+                    value={config.terminal.backend}
+                    onChange={(event) =>
+                      updateConfig((current) => ({
+                        ...current,
+                        terminal: { ...current.terminal, backend: event.target.value },
+                      }))
+                    }
+                  >
+                    {terminalBackendCatalog.map((backend) => (
+                      <option key={backend.id} value={backend.id}>
+                        {backend.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="ui-label">
+                  <div className="ui-label-text">Timeout (seconds)</div>
+                  <input
+                    aria-label="Timeout (seconds)"
+                    value={String(config.terminal.timeout)}
+                    onChange={(event) =>
+                      updateConfig((current) => ({
+                        ...current,
+                        terminal: { ...current.terminal, timeout: Number(event.target.value || 0) },
+                      }))
+                    }
+                  />
+                </label>
+                <label className="ui-label">
+                  <div className="ui-label-text">Working directory</div>
+                  <input
+                    value={config.terminal.cwd}
+                    onChange={(event) =>
+                      updateConfig((current) => ({
+                        ...current,
+                        terminal: { ...current.terminal, cwd: event.target.value },
+                      }))
+                    }
+                  />
+                </label>
+                <label className="ui-label">
+                  <div className="ui-label-text">Execution target</div>
+                  <input
+                    value={config.terminal.target}
+                    onChange={(event) =>
+                      updateConfig((current) => ({
+                        ...current,
+                        terminal: { ...current.terminal, target: event.target.value },
+                      }))
+                    }
+                  />
+                </label>
+                <div className="settings-provider-grid">
+                  {terminalBackendCatalog.map((backend) => (
+                    <section key={backend.id} className="ui-card-soft settings-provider-card">
+                      <div className="ui-card-title">{backend.label}</div>
+                      <div className="ui-meta">{backend.runtime}</div>
+                      <div className="ui-meta">{backend.description}</div>
+                    </section>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {activeTab === 'automation' ? (
+              <div className="settings-stack">
+                <h3 className="ui-card-title">Automation, memory, sessions</h3>
+                <label className="ui-label">
+                  <div className="ui-label-text">Max turns</div>
+                  <input
+                    aria-label="Max turns"
+                    value={String(config.agent.max_turns)}
+                    onChange={(event) =>
+                      updateConfig((current) => ({
+                        ...current,
+                        agent: { ...current.agent, max_turns: Number(event.target.value || 0) },
+                      }))
+                    }
+                  />
+                </label>
+                <label className="ui-label">
+                  <div className="ui-label-text">Session name</div>
+                  <input
+                    value={config.visualClient.session.sessionName}
+                    onChange={(event) =>
+                      updateConfig((current) => ({
+                        ...current,
+                        visualClient: {
+                          ...current.visualClient,
+                          session: { ...current.visualClient.session, sessionName: event.target.value },
+                        },
+                      }))
+                    }
+                  />
+                </label>
+                <label className="chat-checkbox">
+                  <input
+                    aria-label="Streaming SSE"
+                    type="checkbox"
+                    checked={config.visualClient.session.stream}
+                    onChange={(event) =>
+                      updateConfig((current) => ({
+                        ...current,
+                        visualClient: {
+                          ...current.visualClient,
+                          session: { ...current.visualClient.session, stream: event.target.checked },
+                        },
+                      }))
+                    }
+                  />
+                  <span>Streaming SSE</span>
+                </label>
+                <label className="chat-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={config.visualClient.session.memory}
+                    onChange={(event) =>
+                      updateConfig((current) => ({
+                        ...current,
+                        visualClient: {
+                          ...current.visualClient,
+                          session: { ...current.visualClient.session, memory: event.target.checked },
+                        },
+                      }))
+                    }
+                  />
+                  <span>Session memory</span>
+                </label>
+                <label className="ui-label">
+                  <div className="ui-label-text">Compression policy</div>
+                  <select
+                    value={config.visualClient.session.compression}
+                    onChange={(event) =>
+                      updateConfig((current) => ({
+                        ...current,
+                        visualClient: {
+                          ...current.visualClient,
+                          session: {
+                            ...current.visualClient.session,
+                            compression: event.target.value as VisualClientConfig['visualClient']['session']['compression'],
+                          },
+                        },
+                      }))
+                    }
+                  >
+                    <option value="off">off</option>
+                    <option value="adaptive">adaptive</option>
+                    <option value="aggressive">aggressive</option>
+                  </select>
+                </label>
+                <label className="ui-label">
+                  <div className="ui-label-text">Memory file</div>
+                  <input
+                    value={config.visualClient.memory.memoryFile}
+                    onChange={(event) =>
+                      updateConfig((current) => ({
+                        ...current,
+                        visualClient: {
+                          ...current.visualClient,
+                          memory: { ...current.visualClient.memory, memoryFile: event.target.value },
+                        },
+                      }))
+                    }
+                  />
+                </label>
+                <label className="ui-label">
+                  <div className="ui-label-text">User file</div>
+                  <input
+                    value={config.visualClient.memory.userFile}
+                    onChange={(event) =>
+                      updateConfig((current) => ({
+                        ...current,
+                        visualClient: {
+                          ...current.visualClient,
+                          memory: { ...current.visualClient.memory, userFile: event.target.value },
+                        },
+                      }))
+                    }
+                  />
+                </label>
+                <label className="chat-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={config.visualClient.cron.enabled}
+                    onChange={(event) =>
+                      updateConfig((current) => ({
+                        ...current,
+                        visualClient: {
+                          ...current.visualClient,
+                          cron: { ...current.visualClient.cron, enabled: event.target.checked },
+                        },
+                      }))
+                    }
+                  />
+                  <span>Enable cron</span>
+                </label>
+                <label className="ui-label">
+                  <div className="ui-label-text">Cron concurrency</div>
+                  <input
+                    value={String(config.visualClient.cron.concurrency)}
+                    onChange={(event) =>
+                      updateConfig((current) => ({
+                        ...current,
+                        visualClient: {
+                          ...current.visualClient,
+                          cron: { ...current.visualClient.cron, concurrency: Number(event.target.value || 0) },
+                        },
+                      }))
+                    }
+                  />
+                </label>
+                <label className="ui-label">
+                  <div className="ui-label-text">Timezone</div>
+                  <input
+                    value={config.visualClient.cron.timezone}
+                    onChange={(event) =>
+                      updateConfig((current) => ({
+                        ...current,
+                        visualClient: {
+                          ...current.visualClient,
+                          cron: { ...current.visualClient.cron, timezone: event.target.value },
+                        },
+                      }))
+                    }
+                  />
+                </label>
+              </div>
+            ) : null}
+
+            {activeTab === 'packaging' ? (
+              <div className="settings-stack">
+                <h3 className="ui-card-title">Packaging & installer profile</h3>
+                <label className="ui-label">
+                  <div className="ui-label-text">Install profile</div>
+                  <select
+                    value={config.visualClient.packaging.installProfile}
+                    onChange={(event) =>
+                      updateConfig((current) => ({
+                        ...current,
+                        visualClient: {
+                          ...current.visualClient,
+                          packaging: {
+                            ...current.visualClient.packaging,
+                            installProfile: event.target.value as VisualClientConfig['visualClient']['packaging']['installProfile'],
+                          },
+                        },
+                      }))
+                    }
+                  >
+                    <option value="desktop">Desktop</option>
+                    <option value="docker">Docker</option>
+                    <option value="hybrid">Hybrid</option>
+                  </select>
+                </label>
+                <label className="chat-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={config.visualClient.packaging.bundleDockerCompose}
+                    onChange={(event) =>
+                      updateConfig((current) => ({
+                        ...current,
+                        visualClient: {
+                          ...current.visualClient,
+                          packaging: { ...current.visualClient.packaging, bundleDockerCompose: event.target.checked },
+                        },
+                      }))
+                    }
+                  />
+                  <span>Bundle docker-compose.yml</span>
+                </label>
+                <label className="chat-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={config.visualClient.packaging.includeEnvDoctor}
+                    onChange={(event) =>
+                      updateConfig((current) => ({
+                        ...current,
+                        visualClient: {
+                          ...current.visualClient,
+                          packaging: { ...current.visualClient.packaging, includeEnvDoctor: event.target.checked },
+                        },
+                      }))
+                    }
+                  />
+                  <span>Include environment doctor</span>
+                </label>
+
+                <div className="settings-provider-grid">
+                  {envProbeCatalog.map((probe) => (
+                    <section key={probe.id} className="ui-card-soft settings-provider-card">
+                      <div className="ui-card-title">{probe.label}</div>
+                      <div className="ui-code">{probe.command}</div>
+                    </section>
+                  ))}
+                </div>
+                <div className="settings-endpoint-list">
+                  {apiEndpointCatalog.map((endpoint) => (
+                    <div key={`${endpoint.method}-${endpoint.path}`} className="chat-endpoint-item">
+                      <div className="ui-code">{endpoint.path}</div>
+                      <div className="ui-meta">{endpoint.method} · {endpoint.summary}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         </section>
 
-        <section className="ui-card">
+        <aside className="ui-card">
           <div className="ui-card-body">
-            <h3 className="ui-card-title">{t('settings.modelTitle')}</h3>
-            <p className="ui-card-description">{t('settings.defaultModel')}</p>
-            <label className="ui-label" style={{ marginTop: 18 }}>
-              <div className="ui-label-text">{t('settings.defaultModel')}</div>
-              <input value={model} onChange={(e) => setModel(e.target.value)} placeholder="openai/gpt-5.3-codex" />
-            </label>
-            <label className="ui-label">
-              <div className="ui-label-text">{t('settings.maxTurns')}</div>
-              <input value={maxTurns} onChange={(e) => setMaxTurns(e.target.value)} />
-            </label>
-          </div>
-        </section>
-
-        <section className="ui-card">
-          <div className="ui-card-body">
-            <h3 className="ui-card-title">{t('settings.terminalTitle')}</h3>
-            <p className="ui-card-description">{t('settings.description')}</p>
-            <label className="ui-label" style={{ marginTop: 18 }}>
-              <div className="ui-label-text">{t('settings.backend')}</div>
-              <select value={terminalBackend} onChange={(e) => setTerminalBackend(e.target.value)}>
-                <option value="local">{t('settings.backendLocal')}</option>
-                <option value="docker">{t('settings.backendDocker')}</option>
-                <option value="ssh">{t('settings.backendSsh')}</option>
-                <option value="modal">{t('settings.backendModal')}</option>
-                <option value="daytona">{t('settings.backendDaytona')}</option>
-                <option value="singularity">{t('settings.backendSingularity')}</option>
-              </select>
-            </label>
-            <label className="ui-label">
-              <div className="ui-label-text">{t('settings.timeout')}</div>
-              <input value={terminalTimeout} onChange={(e) => setTerminalTimeout(e.target.value)} />
-            </label>
-            <label className="ui-label">
-              <div className="ui-label-text">{t('settings.workingDirectory')}</div>
-              <input value={terminalCwd} onChange={(e) => setTerminalCwd(e.target.value)} />
-            </label>
-          </div>
-        </section>
-
-        <section className="ui-card">
-          <div className="ui-card-body">
-            <h3 className="ui-card-title">clawT for Hermes Agent</h3>
+            <h3 className="ui-card-title">Portable profile</h3>
             <p className="ui-card-description">{t('settings.portabilityDescription')}</p>
             <div className="ui-toolbar" style={{ marginTop: 18 }}>
-              <button onClick={save} disabled={loading}>{t('settings.save')}</button>
+              <button onClick={save} disabled={loading || hasValidationErrors}>{t('settings.save')}</button>
               <button onClick={load} disabled={loading}>{t('settings.reload')}</button>
               <button onClick={exportConfig} disabled={loading}>{t('settings.export')}</button>
               <button onClick={() => importInputRef.current?.click()} disabled={loading}>{t('settings.import')}</button>
@@ -222,6 +788,27 @@ export function SettingsPage() {
             <div className="ui-meta" style={{ marginTop: 14 }}>
               {t('settings.importHint')}
             </div>
+            {hasValidationErrors ? (
+              <div className="ui-status-error" style={{ marginTop: 14 }}>
+                {validationErrors.join('\n')}
+              </div>
+            ) : null}
+
+            <div className="settings-summary-grid">
+              <div className="settings-summary-card">
+                <div className="ui-meta">Enabled providers</div>
+                <div className="settings-summary-value">{config.visualClient.providers.filter((provider) => provider.enabled).length}</div>
+              </div>
+              <div className="settings-summary-card">
+                <div className="ui-meta">Enabled toolsets</div>
+                <div className="settings-summary-value">{config.visualClient.toolsets.filter((toolset) => toolset.enabled).length}</div>
+              </div>
+              <div className="settings-summary-card">
+                <div className="ui-meta">Configured MCP</div>
+                <div className="settings-summary-value">{config.visualClient.mcpServers.filter((server) => server.enabled).length}</div>
+              </div>
+            </div>
+
             <input
               ref={importInputRef}
               type="file"
@@ -230,7 +817,7 @@ export function SettingsPage() {
               style={{ display: 'none' }}
             />
           </div>
-        </section>
+        </aside>
       </div>
     </div>
   )

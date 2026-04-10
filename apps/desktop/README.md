@@ -1,6 +1,6 @@
-# clawT Desktop App
+# Hermes ClawX Desktop App
 
-This directory contains the Electron desktop application for `clawT`.
+This directory contains the Electron desktop application for `Hermes ClawX`.
 
 ## Responsibilities
 

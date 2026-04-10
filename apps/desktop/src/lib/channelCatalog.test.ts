@@ -9,6 +9,8 @@ describe('channelCatalog', () => {
       'slack',
       'signal',
       'whatsapp',
+      'feishu',
+      'wecom',
       'email',
       'matrix',
     ])

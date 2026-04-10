@@ -1,6 +1,6 @@
 # Roadmap
 
-`clawT` 的目标是成为一个稳定、可分发、对普通用户友好的 `Hermes Agent` 桌面客户端。
+`Hermes ClawX` 的目标是成为一个稳定、可分发、对普通用户友好的 `Hermes Agent` 桌面客户端。
 
 ## Phase 1: Usable Open Source Base
 

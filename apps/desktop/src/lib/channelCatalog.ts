@@ -65,6 +65,28 @@ export const channelCatalog: ChannelDefinition[] = [
     ],
   },
   {
+    id: 'feishu',
+    titleKey: 'channels.feishu',
+    descriptionKey: 'channels.feishuDescription',
+    fields: [
+      { key: 'FEISHU_APP_ID', labelKey: 'channels.appId', placeholder: 'cli_xxxxxxxxxxxx' },
+      { key: 'FEISHU_APP_SECRET', labelKey: 'channels.appSecret', placeholder: 'xxxxxxxxxxxx' },
+      { key: 'FEISHU_VERIFICATION_TOKEN', labelKey: 'channels.verificationToken', placeholder: 'token' },
+      { key: 'FEISHU_HOME_CHANNEL', labelKey: 'channels.homeChannel', placeholder: 'oc_xxxxxxxxxxxx' },
+    ],
+  },
+  {
+    id: 'wecom',
+    titleKey: 'channels.wecom',
+    descriptionKey: 'channels.wecomDescription',
+    fields: [
+      { key: 'WECOM_CORP_ID', labelKey: 'channels.corpId', placeholder: 'wwxxxxxxxxxxxx' },
+      { key: 'WECOM_AGENT_ID', labelKey: 'channels.agentId', placeholder: '1000002' },
+      { key: 'WECOM_SECRET', labelKey: 'channels.appSecret', placeholder: 'xxxxxxxxxxxx' },
+      { key: 'WECOM_HOME_CHANNEL', labelKey: 'channels.homeChannel', placeholder: 'engineering' },
+    ],
+  },
+  {
     id: 'email',
     titleKey: 'channels.email',
     descriptionKey: 'channels.emailDescription',

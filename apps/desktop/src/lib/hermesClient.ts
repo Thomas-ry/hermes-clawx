@@ -12,11 +12,17 @@ export async function hermesStatus(): Promise<HermesStatus> {
   return (await window.hermes.status()) as HermesStatus
 }
 
-export async function hermesApiChat(params: { messages: Array<{ role: string; content: string }> }): Promise<string> {
+export async function hermesApiChat(params: {
+  model?: string
+  stream?: boolean
+  messages: Array<{ role: string; content: string }>
+  metadata?: Record<string, unknown>
+}): Promise<string> {
   const body = JSON.stringify({
-    model: 'hermes-agent',
-    stream: false,
+    model: params.model ?? 'hermes-agent',
+    stream: params.stream ?? false,
     messages: params.messages,
+    metadata: params.metadata ?? {},
   })
   const res = await window.hermes.api.fetch({
     path: '/v1/chat/completions',

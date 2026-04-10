@@ -1,17 +1,17 @@
-# clawT
+# Hermes ClawX
 
-`clawT` is a desktop client for `Hermes Agent`.
+`Hermes ClawX` is a desktop client for `Hermes Agent`.
 
 It packages a local Hermes runtime behind an Electron application and exposes the workflows that matter in daily use: chat, cron jobs, skills, channel configuration, runtime settings, logs, packaging, and update delivery.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
-[![Build](https://github.com/Thomas-ry/hermes-clawT/actions/workflows/build.yml/badge.svg)](https://github.com/Thomas-ry/hermes-clawT/actions/workflows/build.yml)
+[![Build](https://github.com/Thomas-ry/hermes-clawx/actions/workflows/build.yml/badge.svg)](https://github.com/Thomas-ry/hermes-clawx/actions/workflows/build.yml)
 
 ## Overview
 
 Most desktop wrappers for agent runtimes stop at “open a window around a local server”.
 
-`clawT` takes a different approach:
+`Hermes ClawX` takes a different approach:
 
 - It treats `Hermes Agent` as the product surface, not as a hidden dependency.
 - It bundles the runtime so non-CLI users can run Hermes locally with fewer moving parts.
@@ -22,31 +22,45 @@ This is not a generic Electron shell and it is not intended to impersonate `Claw
 ## Current Capabilities
 
 - `Dashboard`: runtime status, gateway controls, auto-update controls, and release feed visibility
-- `Chat`: local OpenAI-compatible Hermes chat routed through Electron Main
+- `Chat`: local OpenAI-compatible Hermes workbench with provider selection, tool presets, reserved endpoint inventory, and request timeline visualization
+- `Memory`: `MEMORY.md` / `USER.md` surfaces, cross-session search reservation, and OpenClaw import planning
 - `Cron`: create, inspect, filter, edit, run, pause, resume, and remove cron jobs
 - `Skills`: inspect installed skills and enable or disable them per surface
-- `Channels`: edit environment-backed channel integrations such as Telegram, Discord, Slack, Signal, WhatsApp, Email, and Matrix
-- `Settings`: modify runtime defaults and import or export portable config snapshots
+- `Channels`: edit environment-backed channel integrations such as Telegram, Discord, Slack, Signal, WhatsApp, Feishu, WeCom, Email, and Matrix
+- `Settings`: 8-tab control center for API connection, 12+ providers, 40+ tools, MCP, terminal backends, memory/session/cron parameters, and packaging profiles
 - `Logs`: stream gateway logs with search, stream filtering, and copyable visible output
-- `Packaging`: build macOS, Windows, and Linux desktop artifacts from the same repository
+- `Packaging`: build macOS, Windows, and Linux desktop artifacts from the same repository, with `docker-compose.yml` and environment doctor reserved for foolproof install flows
 
 ## Architecture
 
-At a high level, `clawT` is split into three parts:
+At a high level, `Hermes ClawX` is split into three parts:
 
 1. `Electron Main`
    Starts and supervises the bundled Hermes Gateway, owns privileged runtime operations, and keeps secrets out of the renderer process.
 2. `Preload + IPC`
    Exposes a narrow desktop API to the renderer for gateway control, config management, cron actions, log streaming, and update state.
 3. `React Renderer`
-   Implements the desktop UI for Hermes workflows using page-level views for chat, cron, skills, channels, settings, and logs.
+   Implements the desktop UI for Hermes workflows using page-level views for dashboard, chat, memory, cron, skills, channels, settings, and logs.
 
 Runtime requests from the UI are proxied through Electron Main instead of exposing the local Hermes API key directly in the browser context.
+
+### Reserved API Surface
+
+The renderer is organized around Hermes/OpenAI-compatible endpoints that are already mapped into the product model:
+
+- `GET /health`
+- `GET /v1/models`
+- `POST /v1/chat/completions`
+- `GET /v1/toolsets`
+- `GET /v1/skills`
+- `GET /v1/memory`
+- `GET|POST /v1/cronjobs`
 
 ## Repository Layout
 
 ```text
 apps/desktop/          Electron + React desktop application
+docker-compose.yml     Containerized runtime starter for install and debugging flows
 scripts/               Runtime build, release asset generation, icon generation
 .github/workflows/     CI build and release automation
 README.md              Project overview and operator documentation
@@ -66,16 +80,23 @@ SECURITY.md            Security disclosure guidance
 ### Setup
 
 ```bash
-pnpm install
-pnpm runtime:build
+pnpm setup
 pnpm dev
 ```
 
-`pnpm runtime:build` prepares the bundled Hermes runtime used by the desktop shell. It downloads and assembles the runtime dependencies that are intentionally not committed to the repository.
+`pnpm setup` is the foolproof bootstrap path. It installs workspace dependencies if needed, runs the environment doctor, prepares the bundled Hermes runtime, and leaves you ready to open the desktop app.
+
+If you want a containerized starter environment for the runtime and dependency installation flow:
+
+```bash
+docker compose up -d
+```
 
 ## Common Commands
 
 ```bash
+pnpm doctor
+pnpm setup
 pnpm dev
 pnpm lint
 pnpm test
@@ -89,7 +110,7 @@ If you attempt to package without building the runtime first, packaging will fai
 
 ## Packaging and Distribution
 
-`clawT` is set up for desktop packaging across all three major platforms:
+`Hermes ClawX` is set up for desktop packaging across all three major platforms:
 
 - macOS: `dmg` and `zip`
 - Windows: `NSIS`
@@ -109,7 +130,7 @@ The desktop client uses `electron-updater` with a `generic` provider.
 
 Default update feed:
 
-`https://thomas-ry.github.io/hermes-clawT/updates`
+`https://thomas-ry.github.io/hermes-clawx/updates`
 
 Release automation is handled by GitHub Actions:
 

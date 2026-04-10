@@ -1,4 +1,4 @@
-# Contributing to clawT
+# Contributing to Hermes ClawX
 
 Thanks for considering contributing.
 

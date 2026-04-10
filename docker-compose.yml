@@ -1,0 +1,17 @@
+services:
+  hermes-runtime:
+    image: node:22-bookworm
+    working_dir: /workspace
+    command: >
+      bash -lc "corepack enable &&
+      npm install -g pnpm &&
+      echo 'Hermes runtime container is ready. Run pnpm doctor, pnpm runtime:build, or install Hermes dependencies here.' &&
+      sleep infinity"
+    ports:
+      - "3000:3000"
+      - "11434:11434"
+    volumes:
+      - ./:/workspace
+    environment:
+      HERMES_BASE_URL: http://localhost:3000/v1
+      OLLAMA_HOST: http://host.docker.internal:11434

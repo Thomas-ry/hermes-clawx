@@ -110,7 +110,7 @@ function buildReleaseNotes({ version, tag, previousTag, repoUrl, commits }) {
     })
     .filter(Boolean)
 
-  const markdownLines = [`# clawT ${version}`, '', `Tag: \`${tag}\``]
+  const markdownLines = [`# Hermes ClawX ${version}`, '', `Tag: \`${tag}\``]
   if (previousTag) {
     markdownLines.push(`Previous tag: \`${previousTag}\``)
   }
@@ -145,7 +145,7 @@ function buildReleaseNotes({ version, tag, previousTag, repoUrl, commits }) {
 function main() {
   const args = parseArgs(process.argv.slice(2))
   const outputDir = args['output-dir']
-  const repoUrl = args['repo-url'] || 'https://github.com/Thomas-ry/hermes-clawT'
+  const repoUrl = args['repo-url'] || 'https://github.com/Thomas-ry/hermes-clawx'
   if (!outputDir) {
     throw new Error('Missing required argument: --output-dir')
   }

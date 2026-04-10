@@ -35,6 +35,10 @@ export function ChatPage() {
   const [timeline, setTimeline] = useState<TimelineEvent[]>([
     { id: 'ready', text: 'Desktop proxy ready. Configure provider, model, tool preset, and session details before you send.' },
   ])
+  const [asideCollapsed, setAsideCollapsed] = useState(true)
+  const [sectionProfileOpen, setSectionProfileOpen] = useState(false)
+  const [sectionTimelineOpen, setSectionTimelineOpen] = useState(false)
+  const [sectionApisOpen, setSectionApisOpen] = useState(false)
 
   const visibleMessages = useMemo(() => messages.filter((message) => message.role !== 'system'), [messages])
   const lastAssistantMessage = [...visibleMessages].reverse().find((message) => message.role === 'assistant') ?? null
@@ -226,82 +230,131 @@ export function ChatPage() {
           </div>
         </section>
 
-        <aside className="chat-side-rail">
-          <section className="ui-card">
-            <div className="ui-card-body">
-              <h3 className="ui-card-title">Session Profile</h3>
-              <p className="ui-card-description">Reserve all the knobs we need for a foolproof Hermes visual client.</p>
-              <div className="chat-side-grid">
-                <label className="ui-label">
-                  <div className="ui-label-text">Provider</div>
-                  <select value={providerId} onChange={(event) => setProviderId(event.target.value)}>
-                    {providerCatalog.map((provider) => (
-                      <option key={provider.id} value={provider.id}>
-                        {provider.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="ui-label">
-                  <div className="ui-label-text">Model</div>
-                  <input value={model} onChange={(event) => setModel(event.target.value)} />
-                </label>
-                <label className="ui-label">
-                  <div className="ui-label-text">Tool preset</div>
-                  <select value={toolPresetId} onChange={(event) => setToolPresetId(event.target.value)}>
-                    {toolPresets.map((preset) => (
-                      <option key={preset.id} value={preset.id}>
-                        {preset.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="ui-label">
-                  <div className="ui-label-text">Session name</div>
-                  <input value={sessionName} onChange={(event) => setSessionName(event.target.value)} />
-                </label>
-                <label className="chat-checkbox">
-                  <input
-                    aria-label="Streaming SSE"
-                    type="checkbox"
-                    checked={stream}
-                    onChange={(event) => setStream(event.target.checked)}
-                  />
-                  <span>Streaming SSE</span>
-                </label>
-              </div>
-              <div className="ui-meta">
-                Current preset tools: {selectedPreset.toolIds.join(', ')}
-              </div>
-            </div>
-          </section>
+        <aside className={`chat-side-rail ${asideCollapsed ? 'is-collapsed' : ''}`}>
+          <button
+            type="button"
+            className="aside-toggle-btn"
+            onClick={() => setAsideCollapsed(!asideCollapsed)}
+            title={asideCollapsed ? t('chat.showPanel') : t('chat.hidePanel')}
+          >
+            {asideCollapsed ? t('chat.showPanel') : t('chat.hidePanel')}
+            <span className="aside-toggle-arrow">{asideCollapsed ? '‹' : '›'}</span>
+          </button>
 
-          <section className="ui-card">
-            <div className="ui-card-body">
-              <h3 className="ui-card-title">Request Timeline</h3>
-              <div className="chat-event-list">
-                {timeline.map((item) => (
-                  <div key={item.id} className="chat-event-item">
-                    {item.text}
+          {!asideCollapsed && (
+            <>
+              {/* Session Profile */}
+              <section className="ui-card">
+                <div className="ui-card-body">
+                  <div className="aside-section-header">
+                    <h3 className="ui-card-title">{t('chat.sessionProfile')}</h3>
+                    <button
+                      type="button"
+                      className="aside-section-toggle"
+                      onClick={() => setSectionProfileOpen(!sectionProfileOpen)}
+                    >
+                      {sectionProfileOpen ? t('chat.collapseSection') : t('chat.expandSection')}
+                    </button>
                   </div>
-                ))}
-              </div>
-            </div>
-          </section>
+                  {!sectionProfileOpen && (
+                    <div className="chat-side-grid">
+                      <label className="ui-label">
+                        <div className="ui-label-text">Provider</div>
+                        <select value={providerId} onChange={(event) => setProviderId(event.target.value)}>
+                          {providerCatalog.map((provider) => (
+                            <option key={provider.id} value={provider.id}>
+                              {provider.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="ui-label">
+                        <div className="ui-label-text">Model</div>
+                        <input value={model} onChange={(event) => setModel(event.target.value)} />
+                      </label>
+                      <label className="ui-label">
+                        <div className="ui-label-text">Tool preset</div>
+                        <select value={toolPresetId} onChange={(event) => setToolPresetId(event.target.value)}>
+                          {toolPresets.map((preset) => (
+                            <option key={preset.id} value={preset.id}>
+                              {preset.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="ui-label">
+                        <div className="ui-label-text">Session name</div>
+                        <input value={sessionName} onChange={(event) => setSessionName(event.target.value)} />
+                      </label>
+                      <label className="chat-checkbox">
+                        <input
+                          aria-label="Streaming SSE"
+                          type="checkbox"
+                          checked={stream}
+                          onChange={(event) => setStream(event.target.checked)}
+                        />
+                        <span>Streaming SSE</span>
+                      </label>
+                    </div>
+                  )}
+                  <div className="ui-meta">
+                    Current preset tools: {selectedPreset.toolIds.join(', ')}
+                  </div>
+                </div>
+              </section>
 
-          <section className="ui-card">
-            <div className="ui-card-body">
-              <h3 className="ui-card-title">Reserved APIs</h3>
-              <div className="chat-endpoint-list">
-                {apiEndpointCatalog.map((endpoint) => (
-                  <div key={`${endpoint.method}-${endpoint.path}`} className="chat-endpoint-item">
-                    <div className="ui-code">{endpoint.path}</div>
-                    <div className="ui-meta">{endpoint.method} · {endpoint.summary}</div>
+              {/* Request Timeline */}
+              <section className="ui-card">
+                <div className="ui-card-body">
+                  <div className="aside-section-header">
+                    <h3 className="ui-card-title">{t('chat.requestTimeline')}</h3>
+                    <button
+                      type="button"
+                      className="aside-section-toggle"
+                      onClick={() => setSectionTimelineOpen(!sectionTimelineOpen)}
+                    >
+                      {sectionTimelineOpen ? t('chat.collapseSection') : t('chat.expandSection')}
+                    </button>
                   </div>
-                ))}
-              </div>
-            </div>
-          </section>
+                  {!sectionTimelineOpen && (
+                    <div className="chat-event-list">
+                      {timeline.map((item) => (
+                        <div key={item.id} className="chat-event-item">
+                          {item.text}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              {/* Reserved APIs */}
+              <section className="ui-card">
+                <div className="ui-card-body">
+                  <div className="aside-section-header">
+                    <h3 className="ui-card-title">{t('chat.reservedApis')}</h3>
+                    <button
+                      type="button"
+                      className="aside-section-toggle"
+                      onClick={() => setSectionApisOpen(!sectionApisOpen)}
+                    >
+                      {sectionApisOpen ? t('chat.collapseSection') : t('chat.expandSection')}
+                    </button>
+                  </div>
+                  {!sectionApisOpen && (
+                    <div className="chat-endpoint-list">
+                      {apiEndpointCatalog.map((endpoint) => (
+                        <div key={`${endpoint.method}-${endpoint.path}`} className="chat-endpoint-item">
+                          <div className="ui-code">{endpoint.path}</div>
+                          <div className="ui-meta">{endpoint.method} · {endpoint.summary}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </section>
+            </>
+          )}
         </aside>
       </div>
     </div>

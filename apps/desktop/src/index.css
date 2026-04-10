@@ -432,7 +432,93 @@ pre {
   background: rgba(255, 255, 255, 0.03);
 }
 
-.settings-summary-grid {
+.settings-summary-grid {.settings-summary-card {
+  padding: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-soft);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Collapsible Chat Aside Panel */
+.chat-side-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  position: relative;
+  transition: width 0.2s ease;
+}
+
+.chat-side-rail.is-collapsed {
+  overflow: hidden;
+}
+
+.aside-toggle-btn {
+  position: sticky;
+  top: 18px;
+  float: right;
+  clear: both;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s;
+  white-space: nowrap;
+  margin-bottom: 8px;
+}
+
+.aside-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.aside-toggle-arrow {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.aside-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.aside-section-toggle {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.aside-section-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.chat-workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .chat-workbench {
+    grid-template-columns: 1fr;
+  }
+}
+
+
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-top: 18px;
 }

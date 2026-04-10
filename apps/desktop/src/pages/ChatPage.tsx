@@ -15,11 +15,6 @@ type TimelineEvent = { id: string; text: string }
 
 export function ChatPage() {
   const { t } = useI18n()
-  const starterPrompts = [
-    t('chat.starterPromptArchitecture'),
-    t('chat.starterPromptCron'),
-    t('chat.starterPromptSkills'),
-  ]
   const [messages, setMessages] = useState<ChatMsg[]>([
     { role: 'system', content: 'You are Hermes Agent.' },
   ])
@@ -94,11 +89,6 @@ export function ChatPage() {
     setTimeline([{ id: 'ready', text: 'Conversation cleared. Endpoint reservations and provider wiring stay intact.' }])
   }
 
-  function applyStarterPrompt(prompt: string) {
-    setDraft(prompt)
-    setError(null)
-  }
-
   async function copyLastReply() {
     if (!lastAssistantMessage) return
 
@@ -163,25 +153,6 @@ export function ChatPage() {
                     title={t('chat.emptyTitle')}
                     description={t('chat.emptyDescription')}
                   />
-                  <section className="chat-starter-section" aria-label={t('chat.starterTitle')}>
-                    <div className="chat-starter-header">
-                      <div className="ui-card-title">{t('chat.starterTitle')}</div>
-                      <div className="ui-meta">{t('chat.tip')}</div>
-                    </div>
-                    <div className="chat-starter-grid">
-                      {starterPrompts.map((prompt) => (
-                        <button
-                          key={prompt}
-                          type="button"
-                          className="chat-starter-button"
-                          onClick={() => applyStarterPrompt(prompt)}
-                          disabled={busy}
-                        >
-                          {prompt}
-                        </button>
-                      ))}
-                    </div>
-                  </section>
                 </>
               ) : (
                 visibleMessages.map((message, index) => (

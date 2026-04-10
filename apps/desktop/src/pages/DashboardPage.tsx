@@ -19,6 +19,17 @@ type UpdaterStatus = {
   lastCheckedAt?: string | null
 }
 
+type SetupInspection = {
+  ok?: boolean
+  checkedAt?: string
+  probes?: Array<{
+    id?: string
+    label?: string
+    ok?: boolean
+    detail?: string
+  }>
+}
+
 export function DashboardPage() {
   const { language, t } = useI18n()
   const [status, setStatus] = useState<unknown>(null)
@@ -27,6 +38,8 @@ export function DashboardPage() {
   const [releaseFeed, setReleaseFeed] = useState<ReleaseFeedSummary | null>(null)
   const [releaseFeedError, setReleaseFeedError] = useState<string | null>(null)
   const [releaseFeedLoading, setReleaseFeedLoading] = useState(false)
+  const [setupInspection, setSetupInspection] = useState<SetupInspection | null>(null)
+  const [setupLoading, setSetupLoading] = useState(false)
 
   async function refresh() {
     try {
@@ -65,6 +78,24 @@ export function DashboardPage() {
 
   useEffect(() => {
     refreshReleaseFeed()
+  }, [])
+
+  function refreshSetupInspection() {
+    setSetupLoading(true)
+    window.hermes.setup.inspect()
+      .then((result) => {
+        setSetupInspection(result as SetupInspection)
+      })
+      .catch((inspectionError) => {
+        setErr(String(inspectionError))
+      })
+      .finally(() => {
+        setSetupLoading(false)
+      })
+  }
+
+  useEffect(() => {
+    refreshSetupInspection()
   }, [])
 
   function renderUpdaterStatus(current: UpdaterStatus | null): string {
@@ -221,6 +252,44 @@ export function DashboardPage() {
               <div className="dashboard-quick-description">{t('dashboard.quickSkillsDescription')}</div>
             </Link>
           </div>
+        </div>
+      </section>
+
+      <section className="ui-card" style={{ marginBottom: 18 }}>
+        <div className="ui-card-body">
+          <div className="ui-toolbar" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+            <div>
+              <h3 className="ui-card-title">Setup & Connection</h3>
+              <p className="ui-card-description">
+                Use this panel as the foolproof first-run checklist before testing Hermes ClawX locally.
+              </p>
+            </div>
+            <div className="ui-toolbar">
+              <button onClick={refreshSetupInspection} disabled={setupLoading}>
+                {setupLoading ? 'Checking…' : 'Run environment check'}
+              </button>
+              <Link to="/settings" className="dashboard-quick-link" style={{ padding: '0.72rem 1.15rem' }}>
+                Open connection settings
+              </Link>
+            </div>
+          </div>
+
+          <div className="settings-provider-grid">
+            {(setupInspection?.probes ?? []).map((probe) => (
+              <section key={probe.id} className="ui-card-soft settings-provider-card">
+                <div className="ui-toolbar" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div className="ui-card-title" style={{ marginBottom: 0 }}>{probe.label}</div>
+                  <span className="ui-pill">{probe.ok ? 'Ready' : 'Missing / needs attention'}</span>
+                </div>
+                <div className="ui-meta" style={{ marginTop: 8 }}>{probe.detail}</div>
+              </section>
+            ))}
+          </div>
+          {setupInspection?.checkedAt ? (
+            <div className="ui-meta" style={{ marginTop: 14 }}>
+              Last checked: {setupInspection.checkedAt}
+            </div>
+          ) : null}
         </div>
       </section>
 

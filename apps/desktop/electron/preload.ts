@@ -28,6 +28,9 @@ contextBridge.exposeInMainWorld('hermes', {
   api: {
     fetch: (req: unknown) => ipcRenderer.invoke('hermes.api.fetch', req),
   },
+  setup: {
+    inspect: () => ipcRenderer.invoke('hermes.setup.inspect'),
+  },
   config: {
     get: () => ipcRenderer.invoke('hermes.config.get'),
     save: (config: unknown) => ipcRenderer.invoke('hermes.config.save', config),

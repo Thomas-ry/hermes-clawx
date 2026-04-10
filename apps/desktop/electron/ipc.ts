@@ -3,6 +3,7 @@ import type { HermesGatewayManager } from './hermes/gatewayManager'
 import type { HermesPythonBridge } from './hermes/pythonBridge'
 import type { HermesRuntimePaths } from './hermes/runtimePaths'
 import { apiProxyFetch } from './hermes/apiProxy'
+import { inspectLocalSetup } from './hermes/setupInspector'
 import { readEnvVars, upsertEnvVars } from './hermes/envFile'
 import path from 'node:path'
 import { listCronOutputs, readCronOutput } from './hermes/cronOutputs'
@@ -41,6 +42,7 @@ export function registerIpcHandlers(deps: {
   ipcMain.handle('clawt.updater.install', async () => deps.updater.installUpdate())
 
   ipcMain.handle('hermes.api.fetch', async (_evt, req) => apiProxyFetch(deps.runtime, req))
+  ipcMain.handle('hermes.setup.inspect', async () => inspectLocalSetup(deps.runtime))
 
   ipcMain.handle('hermes.env.get', async () => {
     const envPath = path.join(deps.runtime.hermesHomeDir, '.env')

@@ -20,6 +20,9 @@ declare global {
       api: {
         fetch: (req: unknown) => Promise<{ status: number; headers: Record<string, string>; body: string }>
       }
+      setup: {
+        inspect: () => Promise<unknown>
+      }
       config: {
         get: () => Promise<Record<string, unknown>>
         save: (config: Record<string, unknown>) => Promise<{ success: true }>

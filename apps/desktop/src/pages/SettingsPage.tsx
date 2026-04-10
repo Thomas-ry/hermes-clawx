@@ -237,7 +237,7 @@ export function SettingsPage() {
               <div className="settings-stack">
                 <h3 className="ui-card-title">{t('settings.tabGeneralDefaults')}</h3>
                 <label className="ui-label">
-                  <div className="ui-label-text">Language</div>
+                  <div className="ui-label-text">{t('settings.languageTitle')}</div>
                   <select value={language} onChange={(event) => setLanguage(event.target.value as 'en' | 'zh')}>
                     <option value="en">{t('app.english')}</option>
                     <option value="zh">{t('app.chinese')}</option>

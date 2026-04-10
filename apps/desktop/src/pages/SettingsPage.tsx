@@ -22,15 +22,15 @@ type SettingsTabId =
   | 'automation'
   | 'packaging'
 
-const SETTINGS_TABS: Array<{ id: SettingsTabId; label: string }> = [
-  { id: 'general', label: 'General' },
-  { id: 'connection', label: 'Connection' },
-  { id: 'providers', label: 'Providers' },
-  { id: 'tools', label: 'Tools' },
-  { id: 'mcp', label: 'MCP' },
-  { id: 'terminal', label: 'Terminal' },
-  { id: 'automation', label: 'Automation' },
-  { id: 'packaging', label: 'Packaging' },
+const SETTINGS_TABS: Array<{ id: SettingsTabId; labelKey: string }> = [
+  { id: 'general', labelKey: 'settings.tabsGeneral' },
+  { id: 'connection', labelKey: 'settings.tabsConnection' },
+  { id: 'providers', labelKey: 'settings.tabsProviders' },
+  { id: 'tools', labelKey: 'settings.tabsTools' },
+  { id: 'mcp', labelKey: 'settings.tabsMcp' },
+  { id: 'terminal', labelKey: 'settings.tabsTerminal' },
+  { id: 'automation', labelKey: 'settings.tabsAutomation' },
+  { id: 'packaging', labelKey: 'settings.tabsPackaging' },
 ]
 
 export function SettingsPage() {
@@ -203,9 +203,9 @@ export function SettingsPage() {
         <div className="ui-card-body">
           <div className="ui-toolbar" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
             <div>
-              <h3 className="ui-card-title">Hermes Visual Client Control Center</h3>
+              <h3 className="ui-card-title">{t('settings.overviewTitle2')}</h3>
               <p className="ui-card-description">
-                Mirror the `localhost:3000/chat/new` workflow while reserving every provider, tool, MCP, runtime, and packaging knob we need for a shippable visual client.
+                {t('settings.overviewDesc2')}
               </p>
             </div>
             <div className="ui-toolbar">
@@ -223,7 +223,7 @@ export function SettingsPage() {
                 className={`settings-tab-button ${activeTab === tab.id ? 'is-active' : ''}`}
                 onClick={() => setActiveTab(tab.id)}
               >
-                {tab.label}
+                {t(tab.labelKey)}
               </button>
             ))}
           </div>
@@ -235,7 +235,7 @@ export function SettingsPage() {
           <div className="ui-card-body">
             {activeTab === 'general' ? (
               <div className="settings-stack">
-                <h3 className="ui-card-title">General defaults</h3>
+                <h3 className="ui-card-title">{t('settings.tabGeneralDefaults')}</h3>
                 <label className="ui-label">
                   <div className="ui-label-text">Language</div>
                   <select value={language} onChange={(event) => setLanguage(event.target.value as 'en' | 'zh')}>
@@ -244,15 +244,15 @@ export function SettingsPage() {
                   </select>
                 </label>
                 <label className="ui-label">
-                  <div className="ui-label-text">Default model</div>
+                  <div className="ui-label-text">{t('settings.tabGeneralDefaultModel')}</div>
                   <input
-                    aria-label="Default model"
+                    aria-label={t('settings.tabGeneralDefaultModel')}
                     value={config.model}
                     onChange={(event) => updateConfig((current) => ({ ...current, model: event.target.value }))}
                   />
                 </label>
                 <label className="ui-label">
-                  <div className="ui-label-text">Planning mode</div>
+                  <div className="ui-label-text">{t('settings.tabGeneralPlanningMode')}</div>
                   <select
                     value={config.agent.planning_mode}
                     onChange={(event) =>
@@ -262,9 +262,9 @@ export function SettingsPage() {
                       }))
                     }
                   >
-                    <option value="fast">Fast</option>
-                    <option value="balanced">Balanced</option>
-                    <option value="deep">Deep</option>
+                    <option value="fast">{t('settings.tabGeneralPlanningFast')}</option>
+                    <option value="balanced">{t('settings.tabGeneralPlanningBalanced')}</option>
+                    <option value="deep">{t('settings.tabGeneralPlanningDeep')}</option>
                   </select>
                 </label>
                 <label className="chat-checkbox">
@@ -278,18 +278,18 @@ export function SettingsPage() {
                       }))
                     }
                   />
-                  <span>Enable sub-agent orchestration</span>
+                  <span>{t('settings.tabGeneralSubagents')}</span>
                 </label>
               </div>
             ) : null}
 
             {activeTab === 'connection' ? (
               <div className="settings-stack">
-                <h3 className="ui-card-title">Connection & health</h3>
+                <h3 className="ui-card-title">{t('settings.tabConnectionTitle')}</h3>
                 <label className="ui-label">
-                  <div className="ui-label-text">Base URL</div>
+                  <div className="ui-label-text">{t('settings.tabConnectionBaseUrl')}</div>
                   <input
-                    aria-label="Base URL"
+                    aria-label={t('settings.tabConnectionBaseUrl')}
                     value={config.visualClient.connection.baseUrl}
                     onChange={(event) =>
                       updateConfig((current) => ({
@@ -303,9 +303,9 @@ export function SettingsPage() {
                   />
                 </label>
                 <label className="ui-label">
-                  <div className="ui-label-text">API Key</div>
+                  <div className="ui-label-text">{t('settings.tabConnectionApiKey')}</div>
                   <input
-                    aria-label="API Key"
+                    aria-label={t('settings.tabConnectionApiKey')}
                     type="password"
                     value={config.visualClient.connection.apiKey}
                     onChange={(event) =>
@@ -320,9 +320,9 @@ export function SettingsPage() {
                   />
                 </label>
                 <label className="ui-label">
-                  <div className="ui-label-text">Gateway port</div>
+                  <div className="ui-label-text">{t('settings.tabConnectionGatewayPort')}</div>
                   <input
-                    aria-label="Gateway port"
+                    aria-label={t('settings.tabConnectionGatewayPort')}
                     value={String(config.visualClient.connection.gatewayPort)}
                     onChange={(event) =>
                       updateConfig((current) => ({
@@ -336,7 +336,7 @@ export function SettingsPage() {
                   />
                 </label>
                 <label className="ui-label">
-                  <div className="ui-label-text">Health path</div>
+                  <div className="ui-label-text">{t('settings.tabConnectionHealthPath')}</div>
                   <input
                     value={config.visualClient.connection.healthPath}
                     onChange={(event) =>
@@ -355,7 +355,7 @@ export function SettingsPage() {
 
             {activeTab === 'providers' ? (
               <div className="settings-stack">
-                <h3 className="ui-card-title">Provider matrix</h3>
+                <h3 className="ui-card-title">{t('settings.tabProvidersTitle')}</h3>
                 <div className="settings-provider-grid">
                   {providerCatalog.map((provider) => {
                     const savedProvider = config.visualClient.providers.find((item) => item.id === provider.id)
@@ -372,18 +372,18 @@ export function SettingsPage() {
                           <span>{provider.label}</span>
                         </label>
                         <div className="ui-meta">
-                          Streaming: {provider.supportsStreaming ? 'yes' : 'no'} · Vision: {provider.supportsVision ? 'yes' : 'no'}
+                          {t('settings.tabProvidersStreaming')}: {provider.supportsStreaming ? 'yes' : 'no'} · {t('settings.tabProvidersVision')}: {provider.supportsVision ? 'yes' : 'no'}
                         </div>
                         <label className="ui-label">
-                          <div className="ui-label-text">Base URL</div>
+                          <div className="ui-label-text">{t('settings.tabProvidersBaseUrl')}</div>
                           <input value={savedProvider.baseUrl} onChange={(event) => updateProviderField(provider.id, 'baseUrl', event.target.value)} />
                         </label>
                         <label className="ui-label">
-                          <div className="ui-label-text">API key env</div>
+                          <div className="ui-label-text">{t('settings.tabProvidersApiKeyEnv')}</div>
                           <input value={savedProvider.apiKeyEnv} onChange={(event) => updateProviderField(provider.id, 'apiKeyEnv', event.target.value)} />
                         </label>
                         <label className="ui-label">
-                          <div className="ui-label-text">Default model</div>
+                          <div className="ui-label-text">{t('settings.tabProvidersDefaultModel')}</div>
                           <input value={savedProvider.defaultModel} onChange={(event) => updateProviderField(provider.id, 'defaultModel', event.target.value)} />
                         </label>
                       </section>
@@ -395,8 +395,8 @@ export function SettingsPage() {
 
             {activeTab === 'tools' ? (
               <div className="settings-stack">
-                <h3 className="ui-card-title">Toolsets & reserved capabilities</h3>
-                <p className="ui-card-description">Ship the important Hermes surfaces out of the box, but keep all tool wires reserved.</p>
+                <h3 className="ui-card-title">{t('settings.tabToolsTitle')}</h3>
+                <p className="ui-card-description">{t('settings.tabToolsDescription')}</p>
                 <div className="settings-provider-grid">
                   {toolPresets.map((preset) => {
                     const savedPreset = config.visualClient.toolsets.find((item) => item.id === preset.id)
@@ -430,7 +430,7 @@ export function SettingsPage() {
 
             {activeTab === 'mcp' ? (
               <div className="settings-stack">
-                <h3 className="ui-card-title">MCP servers</h3>
+                <h3 className="ui-card-title">{t('settings.tabMcpTitle')}</h3>
                 {config.visualClient.mcpServers.map((server, index) => (
                   <section key={`${server.id}-${index}`} className="ui-card-soft settings-provider-card">
                     <label className="chat-checkbox">
@@ -442,18 +442,18 @@ export function SettingsPage() {
                       <span>{server.id}</span>
                     </label>
                     <label className="ui-label">
-                      <div className="ui-label-text">Transport</div>
+                      <div className="ui-label-text">{t('settings.tabMcpTransport')}</div>
                       <select value={server.transport} onChange={(event) => updateMcpServer(index, 'transport', event.target.value)}>
                         <option value="stdio">stdio</option>
                         <option value="http">http</option>
                       </select>
                     </label>
                     <label className="ui-label">
-                      <div className="ui-label-text">Command</div>
+                      <div className="ui-label-text">{t('settings.tabMcpCommand')}</div>
                       <input value={server.command} onChange={(event) => updateMcpServer(index, 'command', event.target.value)} />
                     </label>
                     <label className="ui-label">
-                      <div className="ui-label-text">URL</div>
+                      <div className="ui-label-text">{t('settings.tabMcpUrl')}</div>
                       <input value={server.url} onChange={(event) => updateMcpServer(index, 'url', event.target.value)} />
                     </label>
                   </section>
@@ -463,9 +463,9 @@ export function SettingsPage() {
 
             {activeTab === 'terminal' ? (
               <div className="settings-stack">
-                <h3 className="ui-card-title">Terminal backends</h3>
+                <h3 className="ui-card-title">{t('settings.tabTerminalTitle')}</h3>
                 <label className="ui-label">
-                  <div className="ui-label-text">Backend</div>
+                  <div className="ui-label-text">{t('settings.tabTerminalBackend')}</div>
                   <select
                     value={config.terminal.backend}
                     onChange={(event) =>
@@ -483,9 +483,9 @@ export function SettingsPage() {
                   </select>
                 </label>
                 <label className="ui-label">
-                  <div className="ui-label-text">Timeout (seconds)</div>
+                  <div className="ui-label-text">{t('settings.tabTerminalTimeout')}</div>
                   <input
-                    aria-label="Timeout (seconds)"
+                    aria-label={t('settings.tabTerminalTimeout')}
                     value={String(config.terminal.timeout)}
                     onChange={(event) =>
                       updateConfig((current) => ({
@@ -496,7 +496,7 @@ export function SettingsPage() {
                   />
                 </label>
                 <label className="ui-label">
-                  <div className="ui-label-text">Working directory</div>
+                  <div className="ui-label-text">{t('settings.tabTerminalWorkingDir')}</div>
                   <input
                     value={config.terminal.cwd}
                     onChange={(event) =>
@@ -508,7 +508,7 @@ export function SettingsPage() {
                   />
                 </label>
                 <label className="ui-label">
-                  <div className="ui-label-text">Execution target</div>
+                  <div className="ui-label-text">{t('settings.tabTerminalExecTarget')}</div>
                   <input
                     value={config.terminal.target}
                     onChange={(event) =>
@@ -533,11 +533,11 @@ export function SettingsPage() {
 
             {activeTab === 'automation' ? (
               <div className="settings-stack">
-                <h3 className="ui-card-title">Automation, memory, sessions</h3>
+                <h3 className="ui-card-title">{t('settings.tabAutomationTitle')}</h3>
                 <label className="ui-label">
-                  <div className="ui-label-text">Max turns</div>
+                  <div className="ui-label-text">{t('settings.tabAutomationMaxTurns')}</div>
                   <input
-                    aria-label="Max turns"
+                    aria-label={t('settings.tabAutomationMaxTurns')}
                     value={String(config.agent.max_turns)}
                     onChange={(event) =>
                       updateConfig((current) => ({
@@ -548,7 +548,7 @@ export function SettingsPage() {
                   />
                 </label>
                 <label className="ui-label">
-                  <div className="ui-label-text">Session name</div>
+                  <div className="ui-label-text">{t('settings.tabAutomationSessionName')}</div>
                   <input
                     value={config.visualClient.session.sessionName}
                     onChange={(event) =>
@@ -564,7 +564,7 @@ export function SettingsPage() {
                 </label>
                 <label className="chat-checkbox">
                   <input
-                    aria-label="Streaming SSE"
+                    aria-label={t('settings.tabAutomationStreamingSSE')}
                     type="checkbox"
                     checked={config.visualClient.session.stream}
                     onChange={(event) =>
@@ -577,7 +577,7 @@ export function SettingsPage() {
                       }))
                     }
                   />
-                  <span>Streaming SSE</span>
+                  <span>{t('settings.tabAutomationStreamingSSE')}</span>
                 </label>
                 <label className="chat-checkbox">
                   <input
@@ -593,10 +593,10 @@ export function SettingsPage() {
                       }))
                     }
                   />
-                  <span>Session memory</span>
+                  <span>{t('settings.tabAutomationSessionMemory')}</span>
                 </label>
                 <label className="ui-label">
-                  <div className="ui-label-text">Compression policy</div>
+                  <div className="ui-label-text">{t('settings.tabAutomationCompression')}</div>
                   <select
                     value={config.visualClient.session.compression}
                     onChange={(event) =>
@@ -612,13 +612,13 @@ export function SettingsPage() {
                       }))
                     }
                   >
-                    <option value="off">off</option>
-                    <option value="adaptive">adaptive</option>
-                    <option value="aggressive">aggressive</option>
+                    <option value="off">{t('settings.tabAutomationCompressionOff')}</option>
+                    <option value="adaptive">{t('settings.tabAutomationCompressionAdaptive')}</option>
+                    <option value="aggressive">{t('settings.tabAutomationCompressionAggressive')}</option>
                   </select>
                 </label>
                 <label className="ui-label">
-                  <div className="ui-label-text">Memory file</div>
+                  <div className="ui-label-text">{t('settings.tabAutomationMemoryFile')}</div>
                   <input
                     value={config.visualClient.memory.memoryFile}
                     onChange={(event) =>
@@ -633,7 +633,7 @@ export function SettingsPage() {
                   />
                 </label>
                 <label className="ui-label">
-                  <div className="ui-label-text">User file</div>
+                  <div className="ui-label-text">{t('settings.tabAutomationUserFile')}</div>
                   <input
                     value={config.visualClient.memory.userFile}
                     onChange={(event) =>
@@ -661,10 +661,10 @@ export function SettingsPage() {
                       }))
                     }
                   />
-                  <span>Enable cron</span>
+                  <span>{t('settings.tabAutomationEnableCron')}</span>
                 </label>
                 <label className="ui-label">
-                  <div className="ui-label-text">Cron concurrency</div>
+                  <div className="ui-label-text">{t('settings.tabAutomationCronConcurrency')}</div>
                   <input
                     value={String(config.visualClient.cron.concurrency)}
                     onChange={(event) =>
@@ -679,7 +679,7 @@ export function SettingsPage() {
                   />
                 </label>
                 <label className="ui-label">
-                  <div className="ui-label-text">Timezone</div>
+                  <div className="ui-label-text">{t('settings.tabAutomationTimezone')}</div>
                   <input
                     value={config.visualClient.cron.timezone}
                     onChange={(event) =>
@@ -698,9 +698,9 @@ export function SettingsPage() {
 
             {activeTab === 'packaging' ? (
               <div className="settings-stack">
-                <h3 className="ui-card-title">Packaging & installer profile</h3>
+                <h3 className="ui-card-title">{t('settings.tabPackagingTitle')}</h3>
                 <label className="ui-label">
-                  <div className="ui-label-text">Install profile</div>
+                  <div className="ui-label-text">{t('settings.tabPackagingInstallProfile')}</div>
                   <select
                     value={config.visualClient.packaging.installProfile}
                     onChange={(event) =>
@@ -716,9 +716,9 @@ export function SettingsPage() {
                       }))
                     }
                   >
-                    <option value="desktop">Desktop</option>
-                    <option value="docker">Docker</option>
-                    <option value="hybrid">Hybrid</option>
+                    <option value="desktop">{t('settings.tabPackagingDesktop')}</option>
+                    <option value="docker">{t('settings.tabPackagingDocker')}</option>
+                    <option value="hybrid">{t('settings.tabPackagingHybrid')}</option>
                   </select>
                 </label>
                 <label className="chat-checkbox">
@@ -735,7 +735,7 @@ export function SettingsPage() {
                       }))
                     }
                   />
-                  <span>Bundle docker-compose.yml</span>
+                  <span>{t('settings.tabPackagingBundleDocker')}</span>
                 </label>
                 <label className="chat-checkbox">
                   <input
@@ -751,7 +751,7 @@ export function SettingsPage() {
                       }))
                     }
                   />
-                  <span>Include environment doctor</span>
+                  <span>{t('settings.tabPackagingIncludeEnvDoctor')}</span>
                 </label>
 
                 <div className="settings-provider-grid">
@@ -777,7 +777,7 @@ export function SettingsPage() {
 
         <aside className="ui-card">
           <div className="ui-card-body">
-            <h3 className="ui-card-title">Portable profile</h3>
+            <h3 className="ui-card-title">{t('settings.sidebarPortableProfile')}</h3>
             <p className="ui-card-description">{t('settings.portabilityDescription')}</p>
             <div className="ui-toolbar" style={{ marginTop: 18 }}>
               <button onClick={save} disabled={loading || hasValidationErrors}>{t('settings.save')}</button>
@@ -796,15 +796,15 @@ export function SettingsPage() {
 
             <div className="settings-summary-grid">
               <div className="settings-summary-card">
-                <div className="ui-meta">Enabled providers</div>
+                <div className="ui-meta">{t('settings.sidebarEnabledProviders')}</div>
                 <div className="settings-summary-value">{config.visualClient.providers.filter((provider) => provider.enabled).length}</div>
               </div>
               <div className="settings-summary-card">
-                <div className="ui-meta">Enabled toolsets</div>
+                <div className="ui-meta">{t('settings.sidebarEnabledToolsets')}</div>
                 <div className="settings-summary-value">{config.visualClient.toolsets.filter((toolset) => toolset.enabled).length}</div>
               </div>
               <div className="settings-summary-card">
-                <div className="ui-meta">Configured MCP</div>
+                <div className="ui-meta">{t('settings.sidebarConfiguredMcp')}</div>
                 <div className="settings-summary-value">{config.visualClient.mcpServers.filter((server) => server.enabled).length}</div>
               </div>
             </div>
